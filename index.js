@@ -27,6 +27,12 @@ bot.on('message', (message) => { //check message
       case "dong":
         message.channel.sendMessage('ding');
         break;
+      case "bangle":
+          message.channel.sendMessage('shangle');
+          break;
+      case "shangle":
+          message.channel.sendMessage('bangle');
+          break;
     default:
         message.channel.send("Incorrect command");
     }
