@@ -10,7 +10,7 @@ bot.on("ready", function(){
 
 bot.on('message', (message) => { //check message
     if(message.content == 'ping') {
-        message.reply('pong');
+        message.channel.sendMessage('pong');
     }
     if(message.content == 'ding') {
         message.channel.sendMessage('dong');
@@ -20,12 +20,13 @@ bot.on('message', (message) => { //check message
     if (!message.content.startsWith(prefix)) return;
 
     var args = message.content.substring(prefix.length).split(" "); //take each argument
-
+// TODO: automate aws server git update to match bot
     switch (args[0]) {
       case "ping":
         message.channel.sendMessage('pong');
         break;
-
+    default:
+        message.channel.send("Incorrect command");
     }
 });
 
