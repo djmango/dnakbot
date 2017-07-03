@@ -9,12 +9,6 @@ bot.on("ready", function(){
 });
 
 bot.on('message', (message) => { //check message
-    if(message.content == 'ping') {
-        message.channel.sendMessage('pong');
-    }
-    if(message.content == 'ding') {
-        message.channel.sendMessage('dong');
-    }
     if (message.author.equals(bot.user)) return;
 
     if (!message.content.startsWith(prefix)) return;
@@ -26,6 +20,12 @@ bot.on('message', (message) => { //check message
         break;
       case "pong":
         message.channel.sendMessage('ping');
+        break;
+      case "ding":
+        message.channel.sendMessage('dong');
+        break;
+      case "dong":
+        message.channel.sendMessage('ding');
         break;
     default:
         message.channel.send("Incorrect command");
