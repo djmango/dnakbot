@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 
 const bot = new Discord.Client();
-const token = "MzMxMTQyMjU4NDU3ODM3NTcw.DDrUxA.aivQIrt9x8Y1rKS8BvMf_-PwTvg";
+const token = "MzMxMTQyMjU4NDU3ODM3NTcw.DD4WuQ.3idegl_bhtgptKswmHm-2sRNQtU";
 const prefix = "./"
 const request = require("request")
 
