@@ -54,6 +54,9 @@ bot.on('message', (message) => { //check for message
       case "shangle":
           message.channel.send('bangle');
           break;
+      case "is":
+        message.channel.send('yes');
+        break;
       //vexdb commands
       case "vex":
         switch (args[1]) {
