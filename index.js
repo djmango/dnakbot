@@ -5,8 +5,7 @@ const token = "MzMxMTQyMjU4NDU3ODM3NTcw.DD4WuQ.3idegl_bhtgptKswmHm-2sRNQtU";
 const prefix = "./"
 const request = require("request")
 
-//request test
-//var url = "https://api.vexdb.io/v1/get_teams?team=6096A"
+var servers = {};
 var teamdata = 0;
 var teamquery = "6096A";
 
@@ -56,6 +55,14 @@ bot.on('message', (message) => { //check for message
           break;
       case "is":
         message.channel.send('yes');
+        break;
+      case "play":
+        if (!args[1]) {
+          message.channel.send('pls give link')
+        }
+        if (!message.member.voiceChannel) {
+          
+        }
         break;
       //vexdb commands
       case "vex":
