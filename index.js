@@ -60,6 +60,9 @@ client.on('message', (message) => { //check for message
       case "ding":
         message.channel.send('dong');
         break;
+      case "help":
+        message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. type ./commands for commands')
+        break;
       case "info":
         message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. type ./commands for commands')
         break;
@@ -71,22 +74,20 @@ client.on('message', (message) => { //check for message
         if (args[1]) {
           switch (args[1].toLowerCase()) {
             case "add":
-              args[2] = defWord;
-              args[3] = wordDef;
-              console.log(tokens);
               //documentation: use object, server:ojbect:word:defenition, { a: {x: 7, y: 9} }
               //def add (word to define) (definition)
-              var b = {d: eval(message.guild.id)}
-              console.log(b.d)
-              message.channel.send(b.d)
+              args[2] = defWord;
+              args[3] = wordDef;
+              definitions = {serverID: {defWord:wordDef}};
+              message.channel.send({serverID: {defWord:wordDef}})
               break;
             default:
-              message.channel.send('uses include `def add (word to define) (definition)`, `def (word)`, and def del (definition to delete)')
+              message.channel.send('uses include `def add (word to define) (definition)`, `def (word)`, and `def del (definition to delete)`')
 
           }
         }
         else {
-          message.channel.send('uses include `def add (word to define) (definition)`, `def (word)`, and def del (definition to delete)')
+          message.channel.send('uses include `def add (word to define) (definition)`, `def (word)`, and `def del (definition to delete)`')
         }
         break;
       //music commands
