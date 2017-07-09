@@ -10,6 +10,7 @@ const prefix = "./"
 const request = require("request")
 const token = keys.discordtoken
 
+var argsAmnt = 0;
 var serverID;
 var teamdata;
 var queue = [];
@@ -20,8 +21,9 @@ var skipReq = 0;
 var skippers = [];
 var wordTodefine; //word to define
 var wordDefinition; //defenition of word
-//var definitions = {server : {serverID : {wordTodefine:wordDefinition}}};
-var definitions = [{}];
+//var definitions = [{}];
+var definitions = JSON.parse(fs.readFileSync('def.json'))
+//fs.writeFile('def.json', definitions)
 client.on("ready", function(){ //if ready, say so
     console.log("Ready")
 });
@@ -72,18 +74,21 @@ client.on('message', (message) => { //check for message
         if (args[1]) {
           switch (args[1].toLowerCase()) {
             case "add":
-              //documentation: use object, server:object:word:defenition, { a: {x: 7, y: 9} }, {serverID {wordTodefine: wordDefinition, wordTodefine, wordDefinition }}
+              //documentation: use object, server:object:word:defenition, { a: {x: 7, y: 9} }
+              //{serverID {wordTodefine: wordDefinition, wordTodefine, wordDefinition }}
               //def add (word to define) (definition)
-              serverID = JSON.stringify(message.guild.id);
+              serverID = JSON.parse(message.guild.id); //pull server id
+              definitions = JSON.parse(fs.readFileSync(`./def/def${serverID}.json`)) //pull definitions for server
               wordTodefine = args[2]
               wordDefinition = args[3]
-              definitions[serverID] = {wordTodefine:wordDefinition};
-              console.log(definitions[serverID])
-              message.channel.send(JSON.stringify(definitions[serverID]))
+              definitions[wordTodefine] = wordDefinition
+              fs.writeFile(`./def/def${serverID}.json`, JSON.stringify(definitions)) //push updated definitions for server
               break;
             default:
-              message.channel.send('uses include `def add (word to define) (definition)`, `def (word)`, and `def del (definition to delete)`')
-
+              console.log(definitions[serverID])
+              wordTodefine = (args[1])
+              console.log(definitions[serverID][wordTodefine])
+              message.channel.send(definitions[serverID][wordTodefine])
           }
         }
         else {
