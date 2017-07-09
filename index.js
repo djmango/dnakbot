@@ -18,10 +18,10 @@ var dispatcher = null;
 var voiceChannel = null;
 var skipReq = 0;
 var skippers = [];
-var defWord; //word to define
-var wordDef; //defenition of word
-var definitions = {};
-
+var wordTodefine; //word to define
+var wordDefinition; //defenition of word
+//var definitions = {server : {serverID : {wordTodefine:wordDefinition}}};
+var definitions = [{}];
 client.on("ready", function(){ //if ready, say so
     console.log("Ready")
 });
@@ -50,8 +50,6 @@ client.on('message', (message) => { //check for message
     function sendteamdata () {
       message.channel.send(teamdata)
     }
-    serverID = message.guild.id;
-    definitions = {serverID: {defWord:wordDef}};
     switch (args[0].toLowerCase()) {
       //reply statements
       case "ping":
@@ -74,12 +72,14 @@ client.on('message', (message) => { //check for message
         if (args[1]) {
           switch (args[1].toLowerCase()) {
             case "add":
-              //documentation: use object, server:ojbect:word:defenition, { a: {x: 7, y: 9} }
+              //documentation: use object, server:object:word:defenition, { a: {x: 7, y: 9} }, {serverID {wordTodefine: wordDefinition, wordTodefine, wordDefinition }}
               //def add (word to define) (definition)
-              args[2] = defWord;
-              args[3] = wordDef;
-              definitions = {serverID: {defWord:wordDef}};
-              message.channel.send({serverID: {defWord:wordDef}})
+              serverID = JSON.stringify(message.guild.id);
+              wordTodefine = args[2]
+              wordDefinition = args[3]
+              definitions[serverID] = {wordTodefine:wordDefinition};
+              console.log(definitions[serverID])
+              message.channel.send(JSON.stringify(definitions[serverID]))
               break;
             default:
               message.channel.send('uses include `def add (word to define) (definition)`, `def (word)`, and `def del (definition to delete)`')
