@@ -88,6 +88,10 @@ client.on('message', (message) => { //check for message
               definitions[wordTodefine] = wordDefinition
               fs.writeFile(`./def/def${serverID}.json`, JSON.stringify(definitions)) //push updated definitions for server
               break;
+            case "init":
+              serverID = JSON.parse(message.guild.id); //pull server id
+              fs.appendFile(`./def/def${serverID}.json`)
+              break;
             default:
               serverID = JSON.parse(message.guild.id); //pull server id
               definitions = JSON.parse(fs.readFileSync(`./def/def${serverID}.json`)) //pull definitions for server
