@@ -100,7 +100,7 @@ client.on('message', (message) => { //check for message
           }
         }
         else {
-          message.channel.send('uses include `def add (word to define) (definition)`, `def (word)`, and `def del (definition to delete)`')
+          message.channel.send('uses include `def init (run this first)` `def add (word to define) (definition)`, `def (word)`, and `def del (definition to delete)`')
         }
         break;
       //music commands
