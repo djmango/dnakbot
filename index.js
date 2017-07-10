@@ -90,7 +90,7 @@ client.on('message', (message) => { //check for message
               break;
             case "init":
               serverID = JSON.parse(message.guild.id); //pull server id
-              fs.appendFile(`./def/def${serverID}.json`)
+              fs.appendFile(`./def/def${serverID}.json`, JSON.stringify({}))
               break;
             default:
               serverID = JSON.parse(message.guild.id); //pull server id
