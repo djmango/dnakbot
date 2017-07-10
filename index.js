@@ -22,7 +22,7 @@ var skippers = [];
 var wordTodefine; //word to define
 var wordDefinition; //defenition of word
 //var definitions = [{}];
-var definitions = JSON.parse(fs.readFileSync('def.json'))
+var definitions;
 //fs.writeFile('def.json', definitions)
 client.on("ready", function(){ //if ready, say so
     console.log("Ready")
@@ -80,15 +80,19 @@ client.on('message', (message) => { //check for message
               serverID = JSON.parse(message.guild.id); //pull server id
               definitions = JSON.parse(fs.readFileSync(`./def/def${serverID}.json`)) //pull definitions for server
               wordTodefine = args[2]
-              wordDefinition = args[3]
+              wordDefinition = ''
+              //wordDefinition = args[3]
+              for (var i = 3; i < args.length; i++) { //for loop to loop through def args
+                wordDefinition = wordDefinition + ' ' + args[i]
+              }
               definitions[wordTodefine] = wordDefinition
               fs.writeFile(`./def/def${serverID}.json`, JSON.stringify(definitions)) //push updated definitions for server
               break;
             default:
-              console.log(definitions[serverID])
+              serverID = JSON.parse(message.guild.id); //pull server id
+              definitions = JSON.parse(fs.readFileSync(`./def/def${serverID}.json`)) //pull definitions for server
               wordTodefine = (args[1])
-              console.log(definitions[serverID][wordTodefine])
-              message.channel.send(definitions[serverID][wordTodefine])
+              message.channel.send(definitions[wordTodefine])
           }
         }
         else {
