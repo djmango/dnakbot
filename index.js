@@ -2,14 +2,14 @@
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
 const fs = require('fs');
-const getYoutubeID = require('get-youtube-id');
-const fetchVideoInfo = require('youtube-info');
 const client = new Discord.Client();
 const keys = JSON.parse(fs.readFileSync('keys.json'))
 const prefix = "./"
 const request = require("request")
 const token = keys.discordtoken
+const newUsers = [];
 
+var servers = {};
 var argsAmnt = 0;
 var serverID;
 var teamdata;
@@ -21,9 +21,8 @@ var skipReq = 0;
 var skippers = [];
 var wordTodefine; //word to define
 var wordDefinition; //defenition of word
-//var definitions = [{}];
 var definitions;
-//fs.writeFile('def.json', definitions)
+
 client.on("ready", function(){ //if ready, say so
     console.log("Ready")
 });
@@ -42,6 +41,38 @@ function requestdata(url){
         }
       })
 }
+
+client.on('guildMemberAdd', member => {//welcome message
+  member.guild.defaultChannel.send({embed: {
+    color: 0xFFFFFF,
+    author: {
+      name: client.user.username,
+      icon_url: client.user.avatarURL
+    },
+    title: "This server is powered by dnakbot",
+    url: "http://github.com/djmango/dnakbot",
+    description: `Welcome to the server, ${member}!`,
+    fields: [{
+        name: "Info",
+        value: "I am dnak bot, a bot created by djmango. get started by typing ./help!"
+      },
+      {
+        name: "Donations",
+        value: "pls help keep this bot online by donating bitcoin to **1KGVv2QKego2eKVDibci6nXaJcVw9ZdmXV** or PayPal to **anoneemousehax@gmail.com**."
+      },
+      {
+        name: "Feedback",
+        value: "feel free to report bugs or a #feature-request on my [github](http://github.com/djmango/dnakbot)!"
+      },
+    ],
+    timestamp: new Date(),
+    footer: {
+      icon_url: client.user.avatarURL,
+      text: "© djmango"
+    }
+  }
+});
+});
 
 client.on('message', (message) => { //check for message
     if (message.author.equals(client.user)) return; //check if the client sent the message, if so ignore
