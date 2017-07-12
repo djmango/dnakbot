@@ -52,7 +52,7 @@ client.on('guildMemberAdd', member => {//welcome message
     },
     title: "This server is powered by dnakbot",
     url: "http://github.com/djmango/dnakbot",
-    description: `Welcome to the server, ${member}!',
+    description: `Welcome to the server, ${member}!`,
     fields: [{
         name: "Info",
         value: "I am dnak bot, a bot created by djmango. get started by typing ./help!"
