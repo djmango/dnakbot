@@ -7,18 +7,20 @@ const keys = JSON.parse(fs.readFileSync('keys.json'))
 const prefix = "./"
 const request = require("request")
 const token = keys.discordtoken
-const newUsers = [];
+//const yt_api_key = keys.yt_api_key
+//const bot_controller = keys.bot_controller
 
-var servers = {};
+var musicServers = {};
+var musicServer = {};
+var musicQueue = [];
 var argsAmnt = 0;
 var serverID;
 var teamdata;
-var queue = [];
 var isPlaying = false;
 var dispatcher = null;
 var voiceChannel = null;
 var skipReq = 0;
-var skippers = [];
+var musicSkippers = [];
 var wordTodefine; //word to define
 var wordDefinition; //defenition of word
 var definitions;
@@ -40,6 +42,20 @@ function requestdata(url){
           body.result[0].program + ' ' + body.result[0].grade + ' competetion.');
         }
       })
+}
+
+function play(connection, message) {
+  musicServer = musicServers[message.guild.id];
+  musicServer.dispatcher = connection.playStream(ytdl(musicServer.musicQueue[0], {filter: "audioonly"}));
+  musicServer.musicQueue.shift();
+  musicServer.dispatcher.on("end", function() {
+    if (musicServer.musicQueue[0]) play(connection, message);
+    else connection.disconnect();
+  });
+}
+
+function isYoutube(str){
+  return
 }
 
 client.on('guildMemberAdd', member => {//welcome message
@@ -137,13 +153,34 @@ client.on('message', (message) => { //check for message
         break;
       //music commands
       case "play":
+        serverID = JSON.parse(message.guild.id);
         if (!args[1]) {
           message.channel.send('pls give link')
-        }
+          return
+        };
         if (!message.member.voiceChannel) {
           message.channel.send('u not in voice channel b')
-        }
+          return
+        };
 
+        if(!musicServers[serverID]) musicServers[serverID] = {
+          musicQueue: []
+        };
+        musicServer = musicServers[serverID];
+        musicServer.musicQueue.push(args[1]);
+        if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
+          play(connection, message)
+        });
+        break;
+      case "skip":
+        serverID = JSON.parse(message.guild.id);
+        musicServer = musicServers[serverID];
+
+        if(musicServer.dispatcher) musicServer.dispatcher.end();
+        break;
+      case "stop":
+        musicServer = musicServers[serverID];
+        if(message.guild.voiceConnection) message.guild.voiceConnection.disconnect();
         break;
       //vexdb commands
       case "vex":
