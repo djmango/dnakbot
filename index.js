@@ -175,11 +175,12 @@ client.on('message', (message) => { //check for message
       case "skip":
         serverID = JSON.parse(message.guild.id);
         musicServer = musicServers[serverID];
-
         if(musicServer.dispatcher) musicServer.dispatcher.end();
         break;
       case "stop":
         musicServer = musicServers[serverID];
+        musicServers[serverID] = null;
+        musicServer.dispatcher.end();
         if(message.guild.voiceConnection) message.guild.voiceConnection.disconnect();
         break;
       //vexdb commands
