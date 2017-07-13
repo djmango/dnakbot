@@ -2,6 +2,7 @@
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
 const fs = require('fs');
+const ffmpeg = require('ffmpeg');
 const client = new Discord.Client();
 const keys = JSON.parse(fs.readFileSync('keys.json'))
 const prefix = "./"
@@ -45,7 +46,7 @@ function requestdata(url){
 }
 
 function play(connection, message) {
-  musicServer = musicServers[message.guild.id];
+  //musicServer = musicServers[message.guild.id];
   musicServer.dispatcher = connection.playStream(ytdl(musicServer.musicQueue[0], {filter: "audioonly"}));
   musicServer.musicQueue.shift();
   musicServer.dispatcher.on("end", function() {
@@ -59,7 +60,6 @@ function isYoutube(str){
 }
 
 client.on('guildMemberAdd', member => {//welcome message
-  console.log(member);
   member.guild.defaultChannel.send({embed: {
     color: 0xFFFFFF,
     author: {
@@ -166,8 +166,8 @@ client.on('message', (message) => { //check for message
         if(!musicServers[serverID]) musicServers[serverID] = {
           musicQueue: []
         };
+        musicServers[serverID].musicQueue.push(args[1]);
         musicServer = musicServers[serverID];
-        musicServer.musicQueue.push(args[1]);
         if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
           play(connection, message)
         });
