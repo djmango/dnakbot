@@ -50,7 +50,7 @@ client.on('guildMemberAdd', member => {//welcome message
       name: client.user.username,
       icon_url: client.user.avatarURL
     },
-    title: "This server is powered by dnakbot",
+    title: "dnakbot",
     url: "http://github.com/djmango/dnakbot",
     description: `Welcome to the server, ${member}!`,
     fields: [{
@@ -107,7 +107,7 @@ client.on('message', (message) => { //check for message
           switch (args[1].toLowerCase()) {
             case "add":
               //documentation: use object, server:object:word:defenition, { a: {x: 7, y: 9} }
-              //{serverID {wordTodefine: wordDefinition, wordTodefine, wordDefinition }}
+              //[serverID {wordTodefine: wordDefinition, wordTodefine, wordDefinition }]
               //def add (word to define) (definition)
               serverID = JSON.parse(message.guild.id); //pull server id
               definitions = JSON.parse(fs.readFileSync(`./def/def${serverID}.json`)) //pull definitions for server
