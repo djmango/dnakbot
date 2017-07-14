@@ -36,7 +36,7 @@ var wordDefinition; //defenition of word
 var definitions;
 var status;
 var notadmin = 'daddy mango thinks your not good enough for me'
-
+// TODO: factorio server, spam functions, aditional admin stuff, browse discord.js library
 client.on("ready", function(){ //if ready, say so
     console.log("ready!")
 });
@@ -190,7 +190,7 @@ client.on('message', (message) => { //check for message
           },
           {
             name: "music",
-            value: "`play` `skip` `pause` `resume` `list=`` `join` `queue` `song`"
+            value: "`play` `skip` `pause` `resume` `list=` `join` `queue` `song`"
           },
         ],
         timestamp: new Date(),
@@ -242,7 +242,7 @@ client.on('message', (message) => { //check for message
               break;
             case "init":
               serverID = JSON.parse(message.guild.id); //pull server id
-              fs.appendFile(`./def/def${serverID}.json`, JSON.stringify({}))
+              fs.writeFileSync(`./def/def${serverID}.json`, JSON.stringify({}));
               break;
             default:
               serverID = JSON.parse(message.guild.id); //pull server id
