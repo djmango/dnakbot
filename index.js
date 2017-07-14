@@ -17,6 +17,7 @@ const keys = JSON.parse(fs.readFileSync('keys.json'));
 const token = keys.discordtoken
 const yt_api_key = keys.youtubetoken
 const bot_controller = keys.bot_controller
+const bot_controller2 = keys.bot_controller2
 //vars
 console.log("setting variables...");
 var backQueue = [];
@@ -207,18 +208,18 @@ client.on('message', (message) => { //check for message
         for (var i = 1; i < args.length; i++) {
           status = status + ' ' + args[i]
         }
-        if(message.member.roles.has(bot_controller)) client.user.setStatus('online', status), message.channel.send('setting status to' + status)
+        if(message.member.roles.has(bot_controller) || message.member.roles.has(bot_controller2)) client.user.setStatus('online', status), message.channel.send('setting status to' + status)
         else message.channel.send(notadmin)
         break;
       case "purge":
-        if(message.member.roles.has(bot_controller)){
+        if(message.member.roles.has(bot_controller) || message.member.roles.has(bot_controller2)){
           let messagecount = parseInt(args[1]);
           message.channel.fetchMessages({limit: messagecount}).then(messages => message.channel.bulkDelete(messages));
         }
         else message.channel.send(notadmin)
         break;
       case "leaveserver":
-        if(message.member.roles.has(bot_controller)) message.guild.leave()
+        if(message.member.roles.has(bot_controller) ||  message.member.roles.has(bot_controller)) message.guild.leave()
         else message.channel.send(notadmin)
         break;
       //def commands
@@ -314,7 +315,7 @@ client.on('message', function(message) {
         } else {
             message.reply("you already voted!");
         }
-    } else if (mess.startsWith(prefix + 'fskip') && member.roles.has(bot_controller)) {
+    } else if (mess.startsWith(prefix + 'fskip') && (member.roles.has(bot_controller) || message.member.roles.has(bot_controller))) {
         try {
             skip_song();
         } catch (err) {
@@ -372,14 +373,14 @@ client.on('message', function(message) {
         } else {
             message.reply('join a voice channel first');
         }
-    } else if (mess.startsWith(prefix + 'pause') && member.roles.has(bot_controller)) {
+    } else if (mess.startsWith(prefix + 'pause') && (member.roles.has(bot_controller) || message.member.roles.has(bot_controller))) {
         try {
             dispatcher.pause();
             message.reply("pausing!");
         } catch (error) {
             message.reply("no song playing");
         }
-    } else if (mess.startsWith(prefix + 'resume') && member.roles.has(bot_controller)) {
+    } else if (mess.startsWith(prefix + 'resume') && (member.roles.has(bot_controller) || message.member.roles.has(bot_controller))) {
         try {
             dispatcher.resume();
             message.reply("resuming!");
