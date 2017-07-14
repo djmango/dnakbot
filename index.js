@@ -19,9 +19,6 @@ const yt_api_key = keys.youtubetoken
 const bot_controller = keys.bot_controller
 //vars
 console.log("setting variables...");
-var musicServers = {};
-var musicServer = {};
-var musicQueue = [];
 var backQueue = [];
 var queue = [];
 var queueNames = [];
@@ -55,15 +52,6 @@ function requestdata(url){
           body.result[0].program + ' ' + body.result[0].grade + ' competetion.');
         }
       })
-}
-
-function play(connection, message) {
-  musicServer.dispatcher = connection.playStream(ytdl(musicServer.musicQueue[0], {filter: "audioonly"}));
-  musicServer.musicQueue.shift();
-  musicServer.dispatcher.on("end", function() {
-    if (musicServer.musicQueue[0]) play(connection, message);
-    else connection.disconnect();
-  });
 }
 
 function isYoutube(str){
@@ -253,6 +241,8 @@ client.on('message', (message) => { //check for message
         }
         break;
       //music commands
+      case "play":
+        break;
       case "skip":
         break;
       case "fskip":

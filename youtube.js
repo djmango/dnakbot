@@ -1,7 +1,8 @@
 const request = require("request");
 const getYouTubeID = require('get-youtube-id');
-
-var yt_api_key = "";
+const fs = require('fs')
+const keys = JSON.parse(fs.readFileSync('keys.json'));
+const yt_api_key = keys.youtubetoken
 
 module.exports = {
     setApiKey: function (str) {
