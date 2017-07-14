@@ -275,6 +275,16 @@ client.on('message', (message) => { //check for message
         break;
       case "resume":
         break;
+      //dev commmands
+      case "verify":
+        if(message.channel.id == 335507682108768257){
+          // TODO: make an object using def architecture, but with verification requests
+        }
+        else {
+        message.reply("Use the #verification chat for verification requests");
+        message.delete();
+        }
+        break;
       //vexdb commands
       case "vex":
         switch (args[1]) {
