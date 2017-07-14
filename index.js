@@ -1,33 +1,45 @@
 //APIs
+console.log("getting apis...");
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 const ffmpeg = require('ffmpeg');
+const request = require("request");
+const getYouTubeID = require('get-youtube-id');
+const fetchVideoInfo = require('youtube-info');
 const client = new Discord.Client();
-const keys = JSON.parse(fs.readFileSync('keys.json'))
 const prefix = "./"
-const request = require("request")
+const spotify = require('./spotify.js');
+const youtube = require('./youtube.js');
+//keys
+console.log("pulling keys...");
+const keys = JSON.parse(fs.readFileSync('keys.json'));
 const token = keys.discordtoken
-//const yt_api_key = keys.yt_api_key
-//const bot_controller = keys.bot_controller
-
+const yt_api_key = keys.youtubetoken
+const bot_controller = keys.bot_controller
+//vars
+console.log("setting variables...");
 var musicServers = {};
 var musicServer = {};
 var musicQueue = [];
-var argsAmnt = 0;
-var serverID;
-var teamdata;
+var backQueue = [];
+var queue = [];
+var queueNames = [];
 var isPlaying = false;
 var dispatcher = null;
 var voiceChannel = null;
 var skipReq = 0;
-var musicSkippers = [];
+var skippers = [];
+var currentBackQueue = 0;
+var argsAmnt = 0;
+var serverID;
+var teamdata;
 var wordTodefine; //word to define
 var wordDefinition; //defenition of word
 var definitions;
 
 client.on("ready", function(){ //if ready, say so
-    console.log("Ready")
+    console.log("ready!")
 });
 
 function requestdata(url){
@@ -46,7 +58,6 @@ function requestdata(url){
 }
 
 function play(connection, message) {
-  //musicServer = musicServers[message.guild.id];
   musicServer.dispatcher = connection.playStream(ytdl(musicServer.musicQueue[0], {filter: "audioonly"}));
   musicServer.musicQueue.shift();
   musicServer.dispatcher.on("end", function() {
@@ -56,7 +67,77 @@ function play(connection, message) {
 }
 
 function isYoutube(str){
-  return
+  return str.toLowerCase.indexOf("youtube.com") > - 1;
+}
+
+function skip_song() {
+    dispatcher.end();
+}
+
+function playMusic(id, message, backQueueUsed) {
+    voiceChannel = message.member.voiceChannel || voiceChannel;
+
+    if (voiceChannel != null) {
+        voiceChannel.join()
+            .then(function(connection) {
+                stream = ytdl("https://www.youtube.com/watch?v=" + id, {
+                    filter: 'audioonly'
+                });
+                skipReq = 0;
+                skippers = [];
+
+                dispatcher = connection.playStream(stream);
+                dispatcher.on('end', function() {
+                    skipReq = 0;
+                    skippers = [];
+                    if (backQueueUsed) {
+                        currentBackQueue++;
+                    } else {
+                        queue.shift();
+                        queueNames.shift();
+                    }
+                    if (queue.length === 0) {
+                        queue = [];
+                        queueNames = [];
+                        if (backQueue.length === currentBackQueue) {
+                            currentBackQueue = 0;
+                        }
+                        youtube.search_video(backQueue[currentBackQueue] + " official", function(id) {
+                            playMusic(id, message, true);
+                        });
+                    } else {
+                        playMusic(queue[0], message, false);
+                    }
+                });
+            });
+    } else {
+        message.reply("Please be in a voiceChannel or have the bot already in a voiceChannel");
+    }
+}
+
+function shuffle(array) {
+    var currentIndex = array.length,
+        temporaryValue, randomIndex;
+
+    while (1 !== currentIndex) {
+
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+}
+
+function add_to_queue(strID) {
+    if (youtube.isYoutube(strID)) {
+        queue.push(getYouTubeID(strID));
+    } else {
+        queue.push(strID);
+    }
 }
 
 client.on('guildMemberAdd', member => {//welcome message
@@ -105,17 +186,37 @@ client.on('message', (message) => { //check for message
       case "ping":
         message.channel.send('pong');
         break;
-      case "ding":
-        message.channel.send('dong');
-        break;
       case "help":
-        message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. type ./commands for commands')
+        message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. features include youtube music, youtube playlists and custom definitions. type ./commands for commands')
         break;
       case "info":
-        message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. type ./commands for commands')
+        message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. features include youtube music, youtube playlists and custom definitions. type ./commands for commands')
         break;
       case "commands":
-        message.channel.send('COMMANDS: def, info, play, vex; more comming soon to a dsircod sserver near ulolxd')
+        message.channel.send({embed: {
+        color: 0xFFFFFF,
+        author: {
+          name: client.user.username,
+          icon_url: client.user.avatarURL
+        },
+        title: "commands",
+        description: 'list of commands for dnakbot',
+        fields: [{
+            name: "general",
+            value: "`ping` `help` `info` `commands` `def` `def add`"
+          },
+          {
+            name: "music",
+            value: "`play` `skip` `pause` `resume` `list=`` `join` `queue` `song`"
+          },
+        ],
+        timestamp: new Date(),
+        footer: {
+          icon_url: client.user.avatarURL,
+          text: "© djmango"
+        }
+      }
+        });
         break;
       //def commands
       case "def":
@@ -152,36 +253,21 @@ client.on('message', (message) => { //check for message
         }
         break;
       //music commands
-      case "play":
-        serverID = JSON.parse(message.guild.id);
-        if (!args[1]) {
-          message.channel.send('pls give link')
-          return
-        };
-        if (!message.member.voiceChannel) {
-          message.channel.send('u not in voice channel b')
-          return
-        };
-
-        if(!musicServers[serverID]) musicServers[serverID] = {
-          musicQueue: []
-        };
-        musicServers[serverID].musicQueue.push(args[1]);
-        musicServer = musicServers[serverID];
-        if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
-          play(connection, message)
-        });
-        break;
       case "skip":
-        serverID = JSON.parse(message.guild.id);
-        musicServer = musicServers[serverID];
-        if(musicServer.dispatcher) musicServer.dispatcher.end();
         break;
-      case "stop":
-        musicServer = musicServers[serverID];
-        musicServers[serverID] = null;
-        musicServer.dispatcher.end();
-        if(message.guild.voiceConnection) message.guild.voiceConnection.disconnect();
+      case "fskip":
+        break;
+      case "join":
+        break;
+      case "song":
+        break;
+      case "list=":
+        break;
+      case "queue":
+        break;
+      case "pause":
+        break;
+      case "resume":
         break;
       //vexdb commands
       case "vex":
@@ -197,6 +283,127 @@ client.on('message', (message) => { //check for message
         break;
       default: //default
         message.channel.send("Incorrect command");
+    }
+});
+
+client.on('message', function(message) {
+    const member = message.member;
+    const mess = message.content.toLowerCase();
+    const args = message.content.split(' ').slice(1).join(" ");
+/*
+    if (mess.indexOf("discord.gg") > -1) {
+        message.reply("You are not allowed to post other discords here!");
+        message.delete();
+        return;
+
+    }*/ if (mess.startsWith(prefix + 'skip')) {
+        if (skippers.indexOf(message.author.id) == -1) {
+            skippers.push(message.author.id);
+            skipReq++;
+            if (skipReq >= Math.ceil((voiceChannel.members.size - 1) / 2)) {
+                skip_song();
+                message.reply("your skip has been acknowledged. Skipping now!");
+            } else {
+                message.reply("your skip has been acknowledged. You need **" + ((Math.ceil((voiceChannel.members.size - 1) / 2)) - skipReq) + "** more skips requests.");
+            }
+        } else {
+            message.reply("you already voted!");
+        }
+    } else if (mess.startsWith(prefix + 'fskip') && member.roles.has(bot_controller)) {
+        try {
+            skip_song();
+        } catch (err) {
+            console.log(err);
+        }
+    }
+    else if (mess.startsWith(prefix + 'play') && message.channel.id === "331140285646241792") {
+        if (member.voiceChannel || voiceChannel != null) {
+            if (queue.length > 0 || isPlaying) {
+                if (args.toLowerCase().indexOf("list=") === -1) {
+                    youtube.getID(args, function(id) {
+                        add_to_queue(id);
+                        fetchVideoInfo(id, function(err, videoInfo) {
+                            if (err) throw new Error(err);
+                            message.reply(" added to queue: **" + videoInfo.title + "**")
+                            queueNames.push(videoInfo.title);
+                        });
+                    });
+                } else {
+                    youtube.getPlayListSongs(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(arr) {
+                        arr.forEach(function(e) {
+                            add_to_queue(e.snippet.resourceId.videoId);
+                            queueName.push(e.snippet.title);
+                        });
+                        youtube.getPlayListMetaData(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(data) {
+                            message.reply(" added to queue, playlist: **" + data.snippet.title + "**");
+                        });
+                    });
+                }
+            } else {
+                isPlaying = true;
+                if (args.toLowerCase().indexOf("list=") === -1) {
+                    // console.log(args.toLowerCase().indexOf("list=") === -1);
+                    youtube.getID(args, function(id) {
+                        queue.push(id);
+                        playMusic(id, message, false);
+                        fetchVideoInfo(id, function(err, videoInfo) {
+                            if (err) throw new Error(err);
+                            queueNames.push(videoInfo.title);
+                            message.reply(" now playing: **" + videoInfo.title + "**")
+                        });
+                    });
+                } else {
+                    youtube.getPlayListSongs(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(arr) {
+                        arr.forEach(function(e) {
+                            add_to_queue(e.snippet.resourceId.videoId);
+                            queueNames.push(e.snippet.title);
+                        });
+                        playMusic(queue[0], message, false);
+                        youtube.getPlayListMetaData(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(data) {
+                            message.reply(" now playing playlist: **" + data.snippet.title + "**");
+                        });
+                    });
+                }
+            }
+        } else {
+            message.reply('join a voice channel first');
+        }
+    } else if (mess.startsWith(prefix + 'pause') && member.roles.has(bot_controller)) {
+        try {
+            dispatcher.pause();
+            message.reply("pausing!");
+        } catch (error) {
+            message.reply("no song playing");
+        }
+    } else if (mess.startsWith(prefix + 'resume') && member.roles.has(bot_controller)) {
+        try {
+            dispatcher.resume();
+            message.reply("resuming!");
+        } catch (error) {
+            message.reply("no song playing");
+        }
+    }/* else if (/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig.exec(mess) != null && message.channel.id !== "331140285646241792") {
+        client.channels.get('331140285646241792').send(message.author + " said in an **incorrect** chat: \n\n\n" + message.content);
+        message.delete();
+    }*/ else if (mess.startsWith(prefix + "join")) {
+        if (member.voiceChannel) {
+            youtube.search_video(backQueue[currentBackQueue] + " official", function(id) {
+                playMusic(id, message, true);
+                isPlaying = true;
+                message.reply(" joining voice chat -- " + message.member.voiceChannel.name + " -- and starting radio!");
+            });
+        } else {
+            message.reply(" you need to be in a chat!");
+        }
+    } else if (mess.startsWith(prefix + "queue")) {
+        var ret = "\n\n`";
+        for (var i = 0; i < queueNames.length; i++) {
+            ret += (i + 1) + ": " + queueNames[i] + (i === 0 ? " **(Current)**" : "") + "\n";
+        }
+        ret += "`"
+        message.reply(ret);
+    } else if (mess.startsWith(prefix + "song")) {
+        message.reply(" the current song is: *" + (queueNames[0] || backQueue[currentBackQueue]) + "*")
     }
 });
 
