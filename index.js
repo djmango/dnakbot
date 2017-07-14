@@ -34,11 +34,12 @@ var teamdata;
 var wordTodefine; //word to define
 var wordDefinition; //defenition of word
 var definitions;
+var status;
+var notadmin = 'daddy mango thinks your not good enough for me'
 
 client.on("ready", function(){ //if ready, say so
     console.log("ready!")
 });
-
 function requestdata(url){
   request({
       url: url,
@@ -53,15 +54,12 @@ function requestdata(url){
         }
       })
 }
-
 function isYoutube(str){
   return str.toLowerCase.indexOf("youtube.com") > - 1;
 }
-
 function skip_song() {
     dispatcher.end();
 }
-
 function playMusic(id, message, backQueueUsed) {
     voiceChannel = message.member.voiceChannel || voiceChannel;
 
@@ -102,7 +100,6 @@ function playMusic(id, message, backQueueUsed) {
         message.reply("Please be in a voiceChannel or have the bot already in a voiceChannel");
     }
 }
-
 function shuffle(array) {
     var currentIndex = array.length,
         temporaryValue, randomIndex;
@@ -119,7 +116,6 @@ function shuffle(array) {
 
     return array;
 }
-
 function add_to_queue(strID) {
     if (youtube.isYoutube(strID)) {
         queue.push(getYouTubeID(strID));
@@ -127,7 +123,6 @@ function add_to_queue(strID) {
         queue.push(strID);
     }
 }
-
 client.on('guildMemberAdd', member => {//welcome message
   member.guild.defaultChannel.send({embed: {
     color: 0xFFFFFF,
@@ -205,6 +200,26 @@ client.on('message', (message) => { //check for message
         }
       }
         });
+        break;
+      //admin commands
+      case "status":
+        status = ''
+        for (var i = 1; i < args.length; i++) {
+          status = status + ' ' + args[i]
+        }
+        if(message.member.roles.has(bot_controller)) client.user.setStatus('online', status), message.channel.send('setting status to' + status)
+        else message.channel.send(notadmin)
+        break;
+      case "purge":
+        if(message.member.roles.has(bot_controller)){
+          let messagecount = parseInt(args[1]);
+          message.channel.fetchMessages({limit: messagecount}).then(messages => message.channel.bulkDelete(messages));
+        }
+        else message.channel.send(notadmin)
+        break;
+      case "leaveserver":
+        if(message.member.roles.has(bot_controller)) message.guild.leave()
+        else message.channel.send(notadmin)
         break;
       //def commands
       case "def":
@@ -332,7 +347,6 @@ client.on('message', function(message) {
             } else {
                 isPlaying = true;
                 if (args.toLowerCase().indexOf("list=") === -1) {
-                    // console.log(args.toLowerCase().indexOf("list=") === -1);
                     youtube.getID(args, function(id) {
                         queue.push(id);
                         playMusic(id, message, false);
