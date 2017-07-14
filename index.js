@@ -296,13 +296,12 @@ client.on('message', function(message) {
     const member = message.member;
     const mess = message.content.toLowerCase();
     const args = message.content.split(' ').slice(1).join(" ");
-/*
     if (mess.indexOf("discord.gg") > -1) {
         message.reply("You are not allowed to post other discords here!");
         message.delete();
         return;
 
-    }*/ if (mess.startsWith(prefix + 'skip')) {
+    }else if (mess.startsWith(prefix + 'skip')) {
         if (skippers.indexOf(message.author.id) == -1) {
             skippers.push(message.author.id);
             skipReq++;
@@ -387,10 +386,10 @@ client.on('message', function(message) {
         } catch (error) {
             message.reply("no song playing");
         }
-    }/* else if (/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig.exec(mess) != null && message.channel.id !== "331140285646241792") {
-        client.channels.get('331140285646241792').send(message.author + " said in an **incorrect** chat: \n\n\n" + message.content);
+    } else if (/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig.exec(mess) != null && message.channel.id !== "335499850525179904") {
+        client.channels.get('335499850525179904').send(message.author + " said in an **incorrect** chat: \n\n\n" + message.content + "\n please use #link-spam");
         message.delete();
-    }*/ else if (mess.startsWith(prefix + "join")) {
+    } else if (mess.startsWith(prefix + "join")) {
         if (member.voiceChannel) {
             youtube.search_video(backQueue[currentBackQueue] + " official", function(id) {
                 playMusic(id, message, true);
