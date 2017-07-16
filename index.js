@@ -333,7 +333,7 @@ client.on('message', function(message) {
             console.log(err);
         }
     }
-    else if (mess.startsWith(prefix + 'play') && message.channel.id === "331140285646241792") {
+    else if (mess.startsWith(prefix + 'play')) {
         if (member.voiceChannel || voiceChannel != null) {
             if (queue.length > 0 || isPlaying) {
                 if (args.toLowerCase().indexOf("list=") === -1) {
