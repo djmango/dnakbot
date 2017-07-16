@@ -201,15 +201,16 @@ client.on('message', (message) => { //check for message
           text: "© djmango"
         }
       }
-        });
-        break;
+      });
+      break;
       //admin commands
       case "status":
         status = ''
         for (var i = 1; i < args.length; i++) {
           status = status + ' ' + args[i]
         }
-        if(message.member.roles.has(bot_controller) || message.member.roles.has(bot_controller2)) client.user.setStatus('online', status), message.channel.send('setting status to' + status)
+        if(message.member.roles.has(bot_controller) || message.member.roles.has(bot_controller2))
+          client.user.setGame(status), message.channel.send('setting status to' + status)
         else message.channel.send(notadmin)
         break;
       case "purge":
@@ -307,7 +308,7 @@ client.on('message', function(message) {
     const member = message.member;
     const mess = message.content.toLowerCase();
     const args = message.content.split(' ').slice(1).join(" ");
-    if (mess.indexOf("discord.gg") > -1) {
+    if (mess.indexOf("discord.gg") > -1 && message.guild.id == "335495391711854593") {
         message.reply("You are not allowed to post other discords here!");
         message.delete();
         return;
@@ -397,7 +398,7 @@ client.on('message', function(message) {
         } catch (error) {
             message.reply("no song playing");
         }
-    } else if (/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig.exec(mess) != null && message.channel.id !== "335499850525179904") {
+    } else if ((/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig.exec(mess) != null && message.channel.id !== "335499850525179904") && message.guild.id == "335495391711854593") {
         client.channels.get('335499850525179904').send(message.author + " said in an **incorrect** chat: \n\n\n" + message.content + "\n please use #link-spam");
         message.delete();
     } else if (mess.startsWith(prefix + "join")) {
