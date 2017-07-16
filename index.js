@@ -13,35 +13,37 @@ const spotify = require('./spotify.js');
 const youtube = require('./youtube.js');
 //keys
 console.log("pulling keys...");
-const keys = JSON.parse(fs.readFileSync('keys.json'));
-const token = keys.discordtoken
-const yt_api_key = keys.youtubetoken
-const bot_controller = keys.bot_controller
-const bot_controller2 = keys.bot_controller2
+const keys = JSON.parse(fs.readFileSync('keys.json')); //read all keys
+const token = keys.discordtoken //discord api key
+const yt_api_key = keys.youtubetoken //youtube api key
+const bot_controller = keys.bot_controller //retros arcade bot coontroller role
+const bot_controller2 = keys.bot_controller2 //dnak dev bot controller role
 //vars
 console.log("setting variables...");
-var backQueue = [];
-var queue = [];
-var queueNames = [];
-var isPlaying = false;
-var dispatcher = null;
-var voiceChannel = null;
-var skipReq = 0;
-var skippers = [];
-var currentBackQueue = 0;
-var argsAmnt = 0;
-var serverID;
-var teamdata;
+var backQueue = []; //backsongs to play
+var queue = []; //songs to play
+var queueNames = []; //names of items in queue
+var isPlaying = false; //is music playing
+var dispatcher = null; //play music externally
+var voiceChannel = null; //voice channel status
+var skipReq = 0; //how many skip votes
+var skippers = []; //who has voted
+var currentBackQueue = 0; //how many items on backqueue
+var serverID; //current server id
+var teamdata; //json data from vexDB
 var wordTodefine; //word to define
 var wordDefinition; //defenition of word
-var definitions;
-var status;
-var notadmin = 'daddy mango thinks your not good enough for me'
-// TODO: factorio server, spam functions, aditional admin stuff, browse discord.js library
+var definitions; //def object
+var status; //'is playing' status
+var verification = {};
+var verifyUser; //user to verify
+var verifySpecialty;//users specialty
+var notadmin = 'djmango thinks you are not good enough for me'
+// TODO: factorio server, spam functions, aditional admin stuff, browse discord.js-commando library
 client.on("ready", function(){ //if ready, say so
     console.log("ready!")
 });
-function requestdata(url){
+function requestdata(url){ //request data from url
   request({
       url: url,
       json: true
@@ -55,13 +57,13 @@ function requestdata(url){
         }
       })
 }
-function isYoutube(str){
+function isYoutube(str){ //check if argument is youube url
   return str.toLowerCase.indexOf("youtube.com") > - 1;
 }
-function skip_song() {
+function skip_song() { //skip current song
     dispatcher.end();
 }
-function playMusic(id, message, backQueueUsed) {
+function playMusic(id, message, backQueueUsed) { //play requested song
     voiceChannel = message.member.voiceChannel || voiceChannel;
 
     if (voiceChannel != null) {
@@ -101,7 +103,7 @@ function playMusic(id, message, backQueueUsed) {
         message.reply("Please be in a voiceChannel or have the bot already in a voiceChannel");
     }
 }
-function shuffle(array) {
+function shuffle(array) { //shuffle songs
     var currentIndex = array.length,
         temporaryValue, randomIndex;
 
@@ -117,14 +119,14 @@ function shuffle(array) {
 
     return array;
 }
-function add_to_queue(strID) {
+function add_to_queue(strID) { //add args songs to queue
     if (youtube.isYoutube(strID)) {
         queue.push(getYouTubeID(strID));
     } else {
         queue.push(strID);
     }
 }
-client.on('guildMemberAdd', member => {//welcome message
+client.on('guildMemberAdd', member => {//welcome message on join
   member.guild.defaultChannel.send({embed: {
     color: 0xFFFFFF,
     author: {
@@ -153,9 +155,8 @@ client.on('guildMemberAdd', member => {//welcome message
       text: "© djmango"
     }
   }
-});
-});
-
+  });
+  });
 client.on('message', (message) => { //check for message
     if (message.author.equals(client.user)) return; //check if the client sent the message, if so ignore
 
@@ -218,10 +219,6 @@ client.on('message', (message) => { //check for message
         }
         else message.channel.send(notadmin)
         break;
-      case "leaveserver":
-        if(message.member.roles.has(bot_controller) ||  message.member.roles.has(bot_controller)) message.guild.leave()
-        else message.channel.send(notadmin)
-        break;
       //def commands
       case "def":
         if (args[1]) {
@@ -253,7 +250,7 @@ client.on('message', (message) => { //check for message
           }
         }
         else {
-          message.channel.send('uses include `def init (run this first)` `def add (word to define) (definition)`, `def (word)`, and `def del (definition to delete)`')
+          message.channel.send('uses include `def init (run this first)`, `def add (word to define) (definition)`, `def (word)`, and `def del (definition to delete)`')
         }
         break;
       //music commands
@@ -278,10 +275,14 @@ client.on('message', (message) => { //check for message
       //dev commmands
       case "verify":
         if(message.channel.id == 335507682108768257){
-          // TODO: make an object using def architecture, but with verification requests
+          verifyUser = args[1]
+          verifySpecialty = args[2]
+          verification[verifyUser] = verifySpecialty
+          fs.writeFile('./verification.json', JSON.stringify(verification))
+          message.reply('thank you for submitting a verification request')
         }
         else {
-        message.reply("Use the #verification chat for verification requests");
+        message.reply("use the #verification chat for verification requests");
         message.delete();
         }
         break;
