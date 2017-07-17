@@ -15,7 +15,7 @@ module.exports = {
         });
     },
     isYoutube: function (str) {
-        return str.toLowerCase().indexOf("youtube.com") > -1;
+        return str.indexOf("youtube.com") > -1;
     },
 
     getID: function (str, cb) {
