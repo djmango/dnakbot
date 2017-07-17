@@ -158,6 +158,8 @@ client.on('guildMemberAdd', member => {//welcome message on join
   });
   });
 client.on('message', (message) => { //check for message
+    const member = message.member;
+    const mess = message.content.toLowerCase();
     if (message.author.equals(client.user)) return; //check if the client sent the message, if so ignore
 
     if (!message.content.startsWith(prefix)) return; //check for prefix
@@ -192,7 +194,7 @@ client.on('message', (message) => { //check for message
           },
           {
             name: "music",
-            value: "`play` `skip` `pause` `resume` `list=` `join` `queue` `song`"
+            value: "`play`, `skip`, `pause`, `resume`, `join`, `queue`, `song`"
           },
         ],
         timestamp: new Date(),
@@ -200,9 +202,9 @@ client.on('message', (message) => { //check for message
           icon_url: client.user.avatarURL,
           text: "© djmango"
         }
-      }
-      });
-      break;
+        }
+        });
+        break;
       //admin commands
       case "status":
         status = ''
@@ -256,22 +258,114 @@ client.on('message', (message) => { //check for message
         break;
       //music commands
       case "play":
-        break;
+        if (member.voiceChannel || voiceChannel != null) {
+          if (!args[1]) return
+          if (queue.length > 0 || isPlaying) {
+              if (args[1].indexOf("list=") === -1) {//check for playlist
+                  youtube.getID(args, function(id) {
+                      add_to_queue(id);
+                      fetchVideoInfo(id, function(err, videoInfo) {
+                          if (err) throw new Error(err);
+                          message.reply(" added to queue: **" + videoInfo.title + "**")
+                          queueNames.push(videoInfo.title);
+                      });
+                  });
+              } else {
+                  youtube.getPlayListSongs(args.match(/list=(.*)/)[args[1].match(/list=(.*)/).length - 1], 50, function(arr) {
+                      arr.forEach(function(e) {
+                          add_to_queue(e.snippet.resourceId.videoId);
+                          queueName.push(e.snippet.title);
+                      });
+                      youtube.getPlayListMetaData(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(data) {
+                          message.reply(" added to queue, playlist: **" + data.snippet.title + "**");
+                      });
+                  });
+              }
+          } else {
+              isPlaying = true;
+              if (args[1].indexOf("list=") === -1) {
+                  youtube.getID(args, function(id) {
+                      queue.push(id);
+                      playMusic(id, message, false);
+                      fetchVideoInfo(id, function(err, videoInfo) {
+                          if (err) throw new Error(err);
+                          queueNames.push(videoInfo.title);
+                          message.reply(" now playing: **" + videoInfo.title + "**")
+                      });
+                  });
+              } else {
+                  youtube.getPlayListSongs(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(arr) {
+                      arr.forEach(function(e) {
+                          add_to_queue(e.snippet.resourceId.videoId);
+                          queueNames.push(e.snippet.title);
+                      });
+                      playMusic(queue[0], message, false);
+                      youtube.getPlayListMetaData(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(data) {
+                          message.reply(" now playing playlist: **" + data.snippet.title + "**");
+                      });
+                  });
+              }
+            }
+          } else {
+              message.reply('join a voice channel');
+            }
+      break;
       case "skip":
+        if (skippers.indexOf(message.author.id) == -1) {
+          skippers.push(message.author.id);
+          skipReq++;
+          if (skipReq >= Math.ceil((voiceChannel.members.size - 1) / 2)) {
+              skip_song();
+              message.reply("your skip has been acknowledged. Skipping now!");
+          } else {
+              message.reply("your skip has been acknowledged. You need **" + ((Math.ceil((voiceChannel.members.size - 1) / 2)) - skipReq) + "** more skips requests.");
+          }}
         break;
       case "fskip":
+        if((member.roles.has(bot_controller) || message.member.roles.has(bot_controller2))){
+          try {
+            skip_song();
+          } catch (err) {
+            console.log(err);
+          }}
         break;
       case "join":
+        if (member.voiceChannel) {
+          youtube.search_video(backQueue[currentBackQueue] + " official", function(id) {
+              playMusic(id, message, true);
+              isPlaying = true;
+              message.reply(" joining voice chat -- " + message.member.voiceChannel.name + " -- and starting radio!");
+          });
+        } else {
+          message.reply(" you need to be in a chat!");
+        }
         break;
       case "song":
-        break;
-      case "list=":
+        message.reply(" the current song is: *" + (queueNames[0] || backQueue[currentBackQueue]) + "*")
         break;
       case "queue":
+        var ret = "\n\n`";
+        for (var i = 0; i < queueNames.length; i++) {
+          ret += (i + 1) + ": " + queueNames[i] + (i === 0 ? " **(Current)**" : "") + "\n";
+        }
+        ret += "`"
+        message.reply(ret);
         break;
       case "pause":
+        try {
+          dispatcher.pause();
+          message.reply("pausing!");
+        } catch (error) {
+          message.reply("no song playing");
+        }
         break;
       case "resume":
+        try {
+          dispatcher.resume();
+          message.reply("resuming!");
+        } catch (error) {
+          message.reply("no song playing");
+        }
         break;
       //dev commmands
       case "verify":
@@ -300,126 +394,7 @@ client.on('message', (message) => { //check for message
         }
         break;
       default: //default
-        message.channel.send("Incorrect command");
-    }
-});
-
-client.on('message', function(message) {
-    const member = message.member;
-    const mess = message.content.toLowerCase();
-    const args = message.content.split(' ').slice(1).join(" ");
-    if (mess.indexOf("discord.gg") > -1 && message.guild.id == "335495391711854593") {
-        message.reply("You are not allowed to post other discords here!");
-        message.delete();
-        return;
-
-    }else if (mess.startsWith(prefix + 'skip')) {
-        if (skippers.indexOf(message.author.id) == -1) {
-            skippers.push(message.author.id);
-            skipReq++;
-            if (skipReq >= Math.ceil((voiceChannel.members.size - 1) / 2)) {
-                skip_song();
-                message.reply("your skip has been acknowledged. Skipping now!");
-            } else {
-                message.reply("your skip has been acknowledged. You need **" + ((Math.ceil((voiceChannel.members.size - 1) / 2)) - skipReq) + "** more skips requests.");
-            }
-        } else {
-            message.reply("you already voted!");
-        }
-    } else if (mess.startsWith(prefix + 'fskip') && (member.roles.has(bot_controller) || message.member.roles.has(bot_controller))) {
-        try {
-            skip_song();
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    else if (mess.startsWith(prefix + 'play')) {
-        if (member.voiceChannel || voiceChannel != null) {
-            if (queue.length > 0 || isPlaying) {
-                if (args.toLowerCase().indexOf("list=") === -1) {
-                    youtube.getID(args, function(id) {
-                        add_to_queue(id);
-                        fetchVideoInfo(id, function(err, videoInfo) {
-                            if (err) throw new Error(err);
-                            message.reply(" added to queue: **" + videoInfo.title + "**")
-                            queueNames.push(videoInfo.title);
-                        });
-                    });
-                } else {
-                    youtube.getPlayListSongs(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(arr) {
-                        arr.forEach(function(e) {
-                            add_to_queue(e.snippet.resourceId.videoId);
-                            queueName.push(e.snippet.title);
-                        });
-                        youtube.getPlayListMetaData(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(data) {
-                            message.reply(" added to queue, playlist: **" + data.snippet.title + "**");
-                        });
-                    });
-                }
-            } else {
-                isPlaying = true;
-                if (args.toLowerCase().indexOf("list=") === -1) {
-                    youtube.getID(args, function(id) {
-                        queue.push(id);
-                        playMusic(id, message, false);
-                        fetchVideoInfo(id, function(err, videoInfo) {
-                            if (err) throw new Error(err);
-                            queueNames.push(videoInfo.title);
-                            message.reply(" now playing: **" + videoInfo.title + "**")
-                        });
-                    });
-                } else {
-                    youtube.getPlayListSongs(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(arr) {
-                        arr.forEach(function(e) {
-                            add_to_queue(e.snippet.resourceId.videoId);
-                            queueNames.push(e.snippet.title);
-                        });
-                        playMusic(queue[0], message, false);
-                        youtube.getPlayListMetaData(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(data) {
-                            message.reply(" now playing playlist: **" + data.snippet.title + "**");
-                        });
-                    });
-                }
-            }
-        } else {
-            message.reply('join a voice channel first');
-        }
-    } else if (mess.startsWith(prefix + 'pause') && (member.roles.has(bot_controller) || message.member.roles.has(bot_controller))) {
-        try {
-            dispatcher.pause();
-            message.reply("pausing!");
-        } catch (error) {
-            message.reply("no song playing");
-        }
-    } else if (mess.startsWith(prefix + 'resume') && (member.roles.has(bot_controller) || message.member.roles.has(bot_controller))) {
-        try {
-            dispatcher.resume();
-            message.reply("resuming!");
-        } catch (error) {
-            message.reply("no song playing");
-        }
-    } else if ((/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig.exec(mess) != null && message.channel.id !== "335499850525179904") && message.guild.id == "335495391711854593") {
-        client.channels.get('335499850525179904').send(message.author + " said in an **incorrect** chat: \n\n\n" + message.content + "\n please use #link-spam");
-        message.delete();
-    } else if (mess.startsWith(prefix + "join")) {
-        if (member.voiceChannel) {
-            youtube.search_video(backQueue[currentBackQueue] + " official", function(id) {
-                playMusic(id, message, true);
-                isPlaying = true;
-                message.reply(" joining voice chat -- " + message.member.voiceChannel.name + " -- and starting radio!");
-            });
-        } else {
-            message.reply(" you need to be in a chat!");
-        }
-    } else if (mess.startsWith(prefix + "queue")) {
-        var ret = "\n\n`";
-        for (var i = 0; i < queueNames.length; i++) {
-            ret += (i + 1) + ": " + queueNames[i] + (i === 0 ? " **(Current)**" : "") + "\n";
-        }
-        ret += "`"
-        message.reply(ret);
-    } else if (mess.startsWith(prefix + "song")) {
-        message.reply(" the current song is: *" + (queueNames[0] || backQueue[currentBackQueue]) + "*")
+        message.channel.send("incorrect command");
     }
 });
 
