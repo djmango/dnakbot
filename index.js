@@ -39,7 +39,6 @@ var verification = {};
 var verifyUser; //user to verify
 var verifySpecialty;//users specialty
 var notadmin = 'djmango thinks you are not good enough for me'
-// TODO: factorio server, spam functions, aditional admin stuff, browse discord.js-commando library
 client.on("ready", function(){ //if ready, say so
     console.log("ready!")
 });
@@ -49,7 +48,6 @@ function requestdata(url){ //request data from url
       json: true
   }, function getteamdata (error, response, body) {
       if (!error && response.statusCode === 200) {
-          //JSON.parse(body);
           teamdata = ('Team ' + body.result[0].number + ' located in ' + body.result[0].city +
           ', ' + body.result[0].region + ', ' + body.result[0].country + '. They are known as ' +
           body.result[0].team_name + ' of ' + body.result[0].organisation + '. They participate in the ' +
