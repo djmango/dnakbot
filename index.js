@@ -40,7 +40,7 @@ var verifyUser; //user to verify
 var verifySpecialty;//users specialty
 var notadmin = 'djmango thinks you are not good enough for me'
 client.on("ready", function(){ //if ready, say so
-    console.log("ready!")
+    console.log("ready!");
 });
 function requestdata(url){ //request data from url
   request({
@@ -55,7 +55,7 @@ function requestdata(url){ //request data from url
         }
       })
 }
-function isYoutube(str){ //check if argument is youube url
+function isYoutube(str){ //check if argument is youtube url
   return str.toLowerCase.indexOf("youtube.com") > - 1;
 }
 function skip_song() { //skip current song
@@ -169,7 +169,7 @@ client.on('message', (message) => { //check for message
     switch (args[0].toLowerCase()) {
       //reply statements
       case "ping":
-        message.channel.send('pong');
+        message.channel.send('pong ' + + '``' + client.ping + '`');
         break;
       case "help":
         message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. features include youtube music, youtube playlists and custom definitions. type ./commands for commands')
@@ -307,7 +307,7 @@ client.on('message', (message) => { //check for message
           } else {
               message.reply('join a voice channel');
             }
-      break;
+            break;
       case "skip":
         if (skippers.indexOf(message.author.id) == -1) {
           skippers.push(message.author.id);
@@ -364,6 +364,7 @@ client.on('message', (message) => { //check for message
         } catch (error) {
           message.reply("no song playing");
         }
+        console.log(dispatcher)
         break;
       //dev commmands
       case "verify":
