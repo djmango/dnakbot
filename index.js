@@ -7,6 +7,7 @@ const ffmpeg = require('ffmpeg');
 const request = require("request");
 const getYouTubeID = require('get-youtube-id');
 const fetchVideoInfo = require('youtube-info');
+const youtube = require('youtube-node')
 const client = new Discord.Client();
 const prefix = "./"
 const spotify = require('./spotify.js');
@@ -169,7 +170,7 @@ client.on('message', (message) => { //check for message
     switch (args[0].toLowerCase()) {
       //reply statements
       case "ping":
-        message.channel.send('pong ' + + '``' + client.ping + '`');
+        message.channel.send('pong ' + + '`' + client.ping + '`');
         break;
       case "help":
         message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. features include youtube music, youtube playlists and custom definitions. type ./commands for commands')
