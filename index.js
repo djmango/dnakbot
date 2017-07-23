@@ -11,7 +11,6 @@ const youtube = require('youtube-node')
 const client = new Discord.Client();
 const prefix = "./"
 const spotify = require('./spotify.js');
-const youtube = require('./youtube.js');
 //keys
 console.log("pulling keys...");
 const keys = JSON.parse(fs.readFileSync('keys.json')); //read all keys
@@ -21,15 +20,10 @@ const bot_controller = keys.bot_controller //retros arcade bot coontroller role
 const bot_controller2 = keys.bot_controller2 //dnak dev bot controller role
 //vars
 console.log("setting variables...");
-var backQueue = []; //backsongs to play
 var queue = []; //songs to play
 var queueNames = []; //names of items in queue
 var isPlaying = false; //is music playing
 var dispatcher = null; //play music externally
-var voiceChannel = null; //voice channel status
-var skipReq = 0; //how many skip votes
-var skippers = []; //who has voted
-var currentBackQueue = 0; //how many items on backqueue
 var serverID; //current server id
 var teamdata; //json data from vexDB
 var wordTodefine; //word to define
@@ -40,6 +34,10 @@ var verification = {};
 var verifyUser; //user to verify
 var verifySpecialty;//users specialty
 var notadmin = 'djmango thinks you are not good enough for me'
+//set keys
+console.log('pushing keys...');
+youtube.setKey(yt_api_key) //apply youtube api key
+//functions
 client.on("ready", function(){ //if ready, say so
     console.log("ready!");
 });
@@ -61,9 +59,7 @@ function isYoutube(str){ //check if argument is youtube url
 }
 function skip_song() { //skip current song
     dispatcher.end();
-}
-function playMusic(id, message, backQueueUsed) { //play requested song
-    voiceChannel = message.member.voiceChannel || voiceChannel;
+}    voiceChannel = message.member.voiceChannel || voiceChannel;
 
     if (voiceChannel != null) {
         voiceChannel.join()
@@ -117,9 +113,7 @@ function shuffle(array) { //shuffle songs
     }
 
     return array;
-}
-function add_to_queue(strID) { //add args songs to queue
-    if (youtube.isYoutube(strID)) {
+}    if (youtube.isYoutube(strID)) {
         queue.push(getYouTubeID(strID));
     } else {
         queue.push(strID);
