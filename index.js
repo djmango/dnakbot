@@ -7,7 +7,8 @@ const ffmpeg = require('ffmpeg');
 const request = require("request");
 const getYouTubeID = require('get-youtube-id');
 const fetchVideoInfo = require('youtube-info');
-const youtube = require('youtube-node')
+const youtubenode = require('youtube-node')
+const youtube = new youtubenode()
 const client = new Discord.Client();
 const prefix = "./"
 const spotify = require('./spotify.js');
@@ -53,71 +54,6 @@ function requestdata(url){ //request data from url
           body.result[0].program + ' ' + body.result[0].grade + ' competetion.');
         }
       })
-}
-function isYoutube(str){ //check if argument is youtube url
-  return str.toLowerCase.indexOf("youtube.com") > - 1;
-}
-function skip_song() { //skip current song
-    dispatcher.end();
-}    voiceChannel = message.member.voiceChannel || voiceChannel;
-
-    if (voiceChannel != null) {
-        voiceChannel.join()
-            .then(function(connection) {
-                stream = ytdl("https://www.youtube.com/watch?v=" + id, {
-                    filter: 'audioonly'
-                });
-                skipReq = 0;
-                skippers = [];
-
-                dispatcher = connection.playStream(stream);
-                dispatcher.on('end', function() {
-                    skipReq = 0;
-                    skippers = [];
-                    if (backQueueUsed) {
-                        currentBackQueue++;
-                    } else {
-                        queue.shift();
-                        queueNames.shift();
-                    }
-                    if (queue.length === 0) {
-                        queue = [];
-                        queueNames = [];
-                        if (backQueue.length === currentBackQueue) {
-                            currentBackQueue = 0;
-                        }
-                        youtube.search_video(backQueue[currentBackQueue] + " official", function(id) {
-                            playMusic(id, message, true);
-                        });
-                    } else {
-                        playMusic(queue[0], message, false);
-                    }
-                });
-            });
-    } else {
-        message.reply("Please be in a voiceChannel or have the bot already in a voiceChannel");
-    }
-}
-function shuffle(array) { //shuffle songs
-    var currentIndex = array.length,
-        temporaryValue, randomIndex;
-
-    while (1 !== currentIndex) {
-
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex -= 1;
-
-        temporaryValue = array[currentIndex];
-        array[currentIndex] = array[randomIndex];
-        array[randomIndex] = temporaryValue;
-    }
-
-    return array;
-}    if (youtube.isYoutube(strID)) {
-        queue.push(getYouTubeID(strID));
-    } else {
-        queue.push(strID);
-    }
 }
 client.on('guildMemberAdd', member => {//welcome message on join
   member.guild.defaultChannel.send({embed: {
