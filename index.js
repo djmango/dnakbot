@@ -100,7 +100,7 @@ client.on('message', (message) => { //check for message
     switch (args[0].toLowerCase()) {
       //reply statements
       case "ping":
-        message.channel.send('pong ' + + '`' + client.ping + '`');
+        message.channel.send('pong ' + '`' + client.ping + '`');
         break;
       case "help":
         message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. features include youtube music, youtube playlists and custom definitions. type ./commands for commands')
