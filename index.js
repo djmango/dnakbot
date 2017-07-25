@@ -26,6 +26,7 @@ var musicServer = {}; //current music server
 var musicQueue = []; //queue in current server
 var musicList = []; //names of music queue
 var isPlaying = false; //is music playing
+var duration; //duration of current song
 var serverID; //current server id
 var teamdata; //json data from vexDB
 var wordTodefine; //word to define
@@ -41,7 +42,7 @@ console.log('pushing keys...');
 youtube.setKey(yt_api_key) //apply youtube api key
 //functions
 client.on("ready", function(){ //if ready, say so
-    console.log("ready!");
+    console.log("dnakbot is ready!");
 });
 function requestdata(url){ //request data from url
   request({
@@ -61,32 +62,69 @@ function play(connection, message) {
   info(connection, message)
   musicServer.musicQueue.shift();
   musicServer.dispatcher.on("end", function() {
-    if (musicServer.musicQueue[0]) musicList.shift(), play(connection, message);
-    else connection.disconnect();
+    if (musicServer.musicQueue[0]) musicList.shift(), message.reply('now playing ' + musicInfo.title.toLowerCase() + ' `' + duration + '` '), play(connection, message);
+    else isPlaying = false ,connection.disconnect();
   });
 }
-function info(connection, message) {
+function info(message) {
   fetchVideoInfo(getYouTubeID(musicServer.musicQueue[0])).then(function (musicInfo) {
     musicList.push(musicInfo)
     if((musicInfo.duration / 60) >= 1){ //if duration is more than a minute
       if ((musicInfo.duration / 3600) >= 1) { //if duration is more than a hour
         var hours = Math.floor(musicInfo.duration / 3600);
-        var minutes = Math.floor(musicInfo.duration / 60);
-        var seconds = musicInfo.duration - minutes * 60;
-        var duration = `${hours}:${minutes}:${seconds}`
+        if (Math.floor((musicInfo.duration / 60) - (hours * 3600)) < 0) {
+          var minutes = 0
+        }
+        else {
+          var minutes = Math.floor((musicInfo.duration / 60) - (hours * 3600));
+        }
+        var seconds = Math.floor((musicInfo.duration - (minutes * 60)) - (hours * 3600));
+        if (minutes < 10) { //if less than 10 mins
+          if (seconds < 10) { //if less than 10 secconds
+            duration = `${hours}:0${minutes}:0${seconds}`
+          }
+          else {
+            duration = `${hours}:0${minutes}:${seconds}`
+            }
+        }
+        else { //if more than 10 mins
+          if (seconds < 10) { //if less than 10 secconds
+            duration = `${hours}:${minutes}:0${seconds}`
+          }
+          else {
+            duration = `${hours}:${minutes}:${seconds}`
+            }
+        }
       }
       else {//if duration is less than an hour, more than a minute
-        var minutes = Math.floor(musicInfo.duration / 60);
-        var seconds = musicInfo.duration - minutes * 60;
-        var duration = `${minutes}:${seconds}`
+        if (Math.floor(musicInfo.duration / 60) < 10) { //if less than 10 minutes
+          var minutes = Math.floor(musicInfo.duration / 60);
+          var seconds = musicInfo.duration - minutes * 60;
+          if (seconds < 10) { //if less than 10 secconds
+            duration = `0${minutes}:0${seconds}`
+          }
+          else {
+            duration = `0${minutes}:${seconds}`
+          }
+        }
+        else {
+          var minutes = Math.floor(musicInfo.duration / 60);
+          var seconds = musicInfo.duration - minutes * 60;
+          duration = `${minutes}:${seconds}`
+        }
       }
     }
     else { //if duration is less than a minute
-      var seconds = musicInfo.duration - minutes * 60;
-      var duration = `${seconds}`
+      if (musicInfo.duration < 10) { //if less than 10 secconds
+        var seconds = musicInfo.duration;
+        duration = `0${seconds}`
+      }
+      else {
+        var seconds = musicInfo.duration;
+        duration = `${seconds}`
+      }
     }
-    message.channel.send('now playing ' + musicInfo.title.toLowerCase() + ' `' + duration + '` ')
-    console.log(musicList)
+      message.reply('added ' + musicInfo.title.toLowerCase() + ' `' + duration + '` to the queue')
   });
 }
 client.on('guildMemberAdd', member => {//welcome message on join
@@ -235,6 +273,8 @@ client.on('message', (message) => { //check for message
           if (args[1].indexOf('youtube.com')){//if its a link, run code
             musicServers[serverID].musicQueue.push(args[1]);
             musicServer = musicServers[serverID];
+            info(message)
+            isPlaying = true;
           }
           else { //if its a search query, run code
 
@@ -249,9 +289,11 @@ client.on('message', (message) => { //check for message
         }
         break;
       case "skip":
-        serverID = JSON.parse(message.guild.id);
-        musicServer = musicServers[serverID];
-        musicServer.dispatcher.end()
+        if (musicServer.musicQueue[0]) {
+          serverID = JSON.parse(message.guild.id);
+          musicServer = musicServers[serverID];
+          musicServer.dispatcher.end()
+        }
         break;
       case "fskip":
         break;
@@ -264,11 +306,12 @@ client.on('message', (message) => { //check for message
         }
         break;
       case "song":
+        message.reply('currently playing ' + musicList[0].title + ' ' + duration)
         break;
       case "queue":
         var ret = "\n\n`";
         for (var i = 0; i < musicList.length; i++) {
-          ret += (i + 1) + ": " + musicList[i].title + (i === 0 ? " **(Current)**" : "") + "\n";
+          ret += (i + 1) + ": " + musicList[i].title + (i === 0 ? " **(current)**" : "") + "\n";
         }
         ret += "`"
         message.reply(ret);
@@ -278,7 +321,7 @@ client.on('message', (message) => { //check for message
         else message.reply('not playing anything b')
         break;
       case "resume":
-        if(isPlaying == true) musicServer.dispatcher.paused = true
+        if(isPlaying == true) musicServer.dispatcher.paused = false
         else message.reply('not playing anything b')
         break;
       //dev commmands
