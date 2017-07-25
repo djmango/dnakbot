@@ -21,10 +21,11 @@ const bot_controller = keys.bot_controller //retros arcade bot coontroller role
 const bot_controller2 = keys.bot_controller2 //dnak dev bot controller role
 //vars
 console.log("setting variables...");
-var queue = []; //songs to play
-var queueNames = []; //names of items in queue
+var musicServers = {}; //all servers playing music
+var musicServer = {}; //current music server
+var musicQueue = []; //queue in current server
+var musicList = []; //names of music queue
 var isPlaying = false; //is music playing
-var dispatcher = null; //play music externally
 var serverID; //current server id
 var teamdata; //json data from vexDB
 var wordTodefine; //word to define
@@ -54,6 +55,39 @@ function requestdata(url){ //request data from url
           body.result[0].program + ' ' + body.result[0].grade + ' competetion.');
         }
       })
+}
+function play(connection, message) {
+  musicServer.dispatcher = connection.playStream(ytdl(musicServer.musicQueue[0], {filter: "audioonly"}));
+  info(connection, message)
+  musicServer.musicQueue.shift();
+  musicServer.dispatcher.on("end", function() {
+    if (musicServer.musicQueue[0]) musicList.shift(), play(connection, message);
+    else connection.disconnect();
+  });
+}
+function info(connection, message) {
+  fetchVideoInfo(getYouTubeID(musicServer.musicQueue[0])).then(function (musicInfo) {
+    musicList.push(musicInfo)
+    if((musicInfo.duration / 60) >= 1){ //if duration is more than a minute
+      if ((musicInfo.duration / 3600) >= 1) { //if duration is more than a hour
+        var hours = Math.floor(musicInfo.duration / 3600);
+        var minutes = Math.floor(musicInfo.duration / 60);
+        var seconds = musicInfo.duration - minutes * 60;
+        var duration = `${hours}:${minutes}:${seconds}`
+      }
+      else {//if duration is less than an hour, more than a minute
+        var minutes = Math.floor(musicInfo.duration / 60);
+        var seconds = musicInfo.duration - minutes * 60;
+        var duration = `${minutes}:${seconds}`
+      }
+    }
+    else { //if duration is less than a minute
+      var seconds = musicInfo.duration - minutes * 60;
+      var duration = `${seconds}`
+    }
+    message.channel.send('now playing ' + musicInfo.title.toLowerCase() + ' `' + duration + '` ')
+    console.log(musicList)
+  });
 }
 client.on('guildMemberAdd', member => {//welcome message on join
   member.guild.defaultChannel.send({embed: {
@@ -100,7 +134,7 @@ client.on('message', (message) => { //check for message
     switch (args[0].toLowerCase()) {
       //reply statements
       case "ping":
-        message.channel.send('pong ' + '`' + client.ping + '`');
+        message.channel.send('pong ' + '`' + message.member.client.ping + ' msecs' + '`');
         break;
       case "help":
         message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. features include youtube music, youtube playlists and custom definitions. type ./commands for commands')
@@ -187,115 +221,65 @@ client.on('message', (message) => { //check for message
         break;
       //music commands
       case "play":
-        if (member.voiceChannel || voiceChannel != null) {
-          if (!args[1]) return
-          if (queue.length > 0 || isPlaying) {
-              if (args[1].indexOf("list=") === -1) {//check for playlist
-                  youtube.getID(args, function(id) {
-                      add_to_queue(id);
-                      fetchVideoInfo(id, function(err, videoInfo) {
-                          if (err) throw new Error(err);
-                          message.reply(" added to queue: **" + videoInfo.title + "**")
-                          queueNames.push(videoInfo.title);
-                      });
-                  });
-              } else {
-                  youtube.getPlayListSongs(args.match(/list=(.*)/)[args[1].match(/list=(.*)/).length - 1], 50, function(arr) {
-                      arr.forEach(function(e) {
-                          add_to_queue(e.snippet.resourceId.videoId);
-                          queueName.push(e.snippet.title);
-                      });
-                      youtube.getPlayListMetaData(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(data) {
-                          message.reply(" added to queue, playlist: **" + data.snippet.title + "**");
-                      });
-                  });
-              }
-          } else {
-              isPlaying = true;
-              if (args[1].indexOf("list=") === -1) {
-                  youtube.getID(args, function(id) {
-                      queue.push(id);
-                      playMusic(id, message, false);
-                      fetchVideoInfo(id, function(err, videoInfo) {
-                          if (err) throw new Error(err);
-                          queueNames.push(videoInfo.title);
-                          message.reply(" now playing: **" + videoInfo.title + "**")
-                      });
-                  });
-              } else {
-                  youtube.getPlayListSongs(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(arr) {
-                      arr.forEach(function(e) {
-                          add_to_queue(e.snippet.resourceId.videoId);
-                          queueNames.push(e.snippet.title);
-                      });
-                      playMusic(queue[0], message, false);
-                      youtube.getPlayListMetaData(args.match(/list=(.*)/)[args.match(/list=(.*)/).length - 1], 50, function(data) {
-                          message.reply(" now playing playlist: **" + data.snippet.title + "**");
-                      });
-                  });
-              }
-            }
-          } else {
-              message.reply('join a voice channel');
-            }
-            break;
+        if (args[1]) {//if link or search query is provided, run code
+
+          serverID = JSON.parse(message.guild.id);
+          if (!message.member.voiceChannel) {
+            message.channel.send('u not in voice channel b')
+            return
+          };//check if on voice channel
+          if(!musicServers[serverID]) musicServers[serverID] = {
+            musicQueue: []
+          };
+
+          if (args[1].indexOf('youtube.com')){//if its a link, run code
+            musicServers[serverID].musicQueue.push(args[1]);
+            musicServer = musicServers[serverID];
+          }
+          else { //if its a search query, run code
+
+          }
+          if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
+            play(connection, message)
+          });
+        }
+        else {
+          message.reply('pls provide a link or search query')
+          return;
+        }
+        break;
       case "skip":
-        if (skippers.indexOf(message.author.id) == -1) {
-          skippers.push(message.author.id);
-          skipReq++;
-          if (skipReq >= Math.ceil((voiceChannel.members.size - 1) / 2)) {
-              skip_song();
-              message.reply("your skip has been acknowledged. Skipping now!");
-          } else {
-              message.reply("your skip has been acknowledged. You need **" + ((Math.ceil((voiceChannel.members.size - 1) / 2)) - skipReq) + "** more skips requests.");
-          }}
+        serverID = JSON.parse(message.guild.id);
+        musicServer = musicServers[serverID];
+        musicServer.dispatcher.end()
         break;
       case "fskip":
-        if((member.roles.has(bot_controller) || message.member.roles.has(bot_controller2))){
-          try {
-            skip_song();
-          } catch (err) {
-            console.log(err);
-          }}
         break;
       case "join":
-        if (member.voiceChannel) {
-          youtube.search_video(backQueue[currentBackQueue] + " official", function(id) {
-              playMusic(id, message, true);
-              isPlaying = true;
-              message.reply(" joining voice chat -- " + message.member.voiceChannel.name + " -- and starting radio!");
-          });
-        } else {
-          message.reply(" you need to be in a chat!");
+        if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
+          play(connection, message)
+        });
+        else {
+          message.reply('im already in a voice channel b')
         }
         break;
       case "song":
-        message.reply(" the current song is: *" + (queueNames[0] || backQueue[currentBackQueue]) + "*")
         break;
       case "queue":
         var ret = "\n\n`";
-        for (var i = 0; i < queueNames.length; i++) {
-          ret += (i + 1) + ": " + queueNames[i] + (i === 0 ? " **(Current)**" : "") + "\n";
+        for (var i = 0; i < musicList.length; i++) {
+          ret += (i + 1) + ": " + musicList[i].title + (i === 0 ? " **(Current)**" : "") + "\n";
         }
         ret += "`"
         message.reply(ret);
         break;
       case "pause":
-        try {
-          dispatcher.pause();
-          message.reply("pausing!");
-        } catch (error) {
-          message.reply("no song playing");
-        }
+        if(isPlaying == true) musicServer.dispatcher.paused = true
+        else message.reply('not playing anything b')
         break;
       case "resume":
-        try {
-          dispatcher.resume();
-          message.reply("resuming!");
-        } catch (error) {
-          message.reply("no song playing");
-        }
-        console.log(dispatcher)
+        if(isPlaying == true) musicServer.dispatcher.paused = true
+        else message.reply('not playing anything b')
         break;
       //dev commmands
       case "verify":
