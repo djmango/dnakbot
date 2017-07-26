@@ -25,7 +25,10 @@ var musicServers = {}; //all servers playing music
 var musicServer = {}; //current music server
 var musicQueue = []; //queue in current server
 var musicList = []; //names of music queue
+var musicResults = [4]; //all results of search query
+var musicSearch; //query for youtube search
 var isPlaying = false; //is music playing
+var isSearch = true; //if query is for search
 var duration; //duration of current song
 var serverID; //current server id
 var teamdata; //json data from vexDB
@@ -59,6 +62,7 @@ function requestdata(url){ //request data from url
 }
 function play(connection, message) {
   musicServer.dispatcher = connection.playStream(ytdl(musicServer.musicQueue[0], {filter: "audioonly"}));
+  console.log('joined')
   info(connection, message)
   musicServer.musicQueue.shift();
   musicServer.dispatcher.on("end", function() {
@@ -235,7 +239,6 @@ client.on('message', (message) => { //check for message
               definitions = JSON.parse(fs.readFileSync(`./def/def${serverID}.json`)) //pull definitions for server
               wordTodefine = args[2]
               wordDefinition = ''
-              //wordDefinition = args[3]
               for (var i = 3; i < args.length; i++) { //for loop to loop through def args
                 wordDefinition = wordDefinition + ' ' + args[i]
               }
@@ -259,8 +262,8 @@ client.on('message', (message) => { //check for message
         break;
       //music commands
       case "play":
+        isSearch = true;
         if (args[1]) {//if link or search query is provided, run code
-
           serverID = JSON.parse(message.guild.id);
           if (!message.member.voiceChannel) {
             message.channel.send('u not in voice channel b')
@@ -269,17 +272,39 @@ client.on('message', (message) => { //check for message
           if(!musicServers[serverID]) musicServers[serverID] = {
             musicQueue: []
           };
-
-          if (args[1].indexOf('youtube.com')){//if its a link, run code
+          if (args[1].indexOf('youtube.com') >= 0){//if its a link, run code
             musicServers[serverID].musicQueue.push(args[1]);
             musicServer = musicServers[serverID];
             info(message)
             isPlaying = true;
+            isSearch = false;
           }
           else { //if its a search query, run code
-
+            for (var i = 1; i < args.length; i++) { //for loop to loop through search query
+              musicSearch = musicSearch + ' ' + args[i]
+            }
+            youtube.search(musicSearch, 5, function(error, result) {
+              if (error) {
+                console.log(error);
+              }
+              else {
+                //push results to public variable
+                for (var i = 0; i < 5; i++) {
+                  musicResults[i] = result.items[i]
+                }
+                //choose song out of results
+                var ret = "\n\n`";
+                for (var i = 0; i < musicResults.length; i++) {
+                  ret += (i + 1) + ": " + musicResults[i].snippet.title + "\n";
+                }
+                ret += "`"
+                message.reply('search results:' + ret);
+                isSearch = true;
+              }
+            });
           }
-          if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
+          if(!message.guild.voiceConnection && isSearch == false) message.member.voiceChannel.join().then(function(connection){
+            console.log('joined for some re');
             play(connection, message)
           });
         }
@@ -288,14 +313,25 @@ client.on('message', (message) => { //check for message
           return;
         }
         break;
+      case "choose":
+        serverID = JSON.parse(message.guild.id);
+        args[1] = args[1] - 1;
+        message.reply('now playing: ' + musicResults[args[1]].snippet.title)
+        musicServers[serverID].musicQueue.push('https://www.youtube.com/watch?v=' + musicResults[args[1]].id.videoId);
+        console.log(musicServers[serverID].musicQueue[0])
+        musicServer = musicServers[serverID];
+        isPlaying = true;
+        info(message)
+        if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
+          play(connection, message)
+        });
+        break;
       case "skip":
         if (musicServer.musicQueue[0]) {
           serverID = JSON.parse(message.guild.id);
           musicServer = musicServers[serverID];
           musicServer.dispatcher.end()
         }
-        break;
-      case "fskip":
         break;
       case "join":
         if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
@@ -317,11 +353,11 @@ client.on('message', (message) => { //check for message
         message.reply(ret);
         break;
       case "pause":
-        if(isPlaying == true) musicServer.dispatcher.paused = true
+        if(isPlaying == true) musicServer.dispatcher.paused = true, message.reply('paused')
         else message.reply('not playing anything b')
         break;
       case "resume":
-        if(isPlaying == true) musicServer.dispatcher.paused = false
+        if(isPlaying == true) musicServer.dispatcher.paused = false, message.reply('resumed')
         else message.reply('not playing anything b')
         break;
       //dev commmands
