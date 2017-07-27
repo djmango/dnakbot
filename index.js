@@ -25,7 +25,7 @@ var musicServers = {}; //all servers playing music
 var musicServer = {}; //current music server
 var musicQueue = []; //queue in current server
 var musicList = []; //names of music queue
-var musicResults = [4]; //all results of search query
+var musicResults = []; //all results of search query
 var musicSearch; //query for youtube search
 var isPlaying = false; //is music playing
 var isSearch = true; //if query is for search
@@ -128,7 +128,7 @@ function info(message) {
         duration = `${seconds}`
       }
     }
-      message.reply('added ' + musicInfo.title.toLowerCase() + ' `' + duration + '` to the queue')
+    message.reply('added ' + musicInfo.title + ' `' + duration + '` to the queue')
   });
 }
 client.on('guildMemberAdd', member => {//welcome message on join
@@ -160,8 +160,8 @@ client.on('guildMemberAdd', member => {//welcome message on join
       text: "© djmango"
     }
   }
-  });
-  });
+      });
+    });
 client.on('message', (message) => { //check for message
     const member = message.member;
     const mess = message.content.toLowerCase();
@@ -330,7 +330,10 @@ client.on('message', (message) => { //check for message
         if (musicServer.musicQueue[0]) {
           serverID = JSON.parse(message.guild.id);
           musicServer = musicServers[serverID];
+          console.log(musicList)
+          musicList.shift()
           musicServer.dispatcher.end()
+          console.log(musicList)
         }
         break;
       case "join":
