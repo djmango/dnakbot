@@ -30,6 +30,7 @@ var musicResults = []; //all results of search query
 var musicSearch; //query for youtube search
 var isPlaying = false; //is music playing
 var isSearch = true; //if query is for search
+var isLooping = false; //if music is looping
 var duration; //duration of current song
 var serverID; //current server id
 var teamdata; //json data from vexDB
@@ -48,26 +49,32 @@ youtube.setKey(yt_api_key) //apply youtube api key
 //functions
 client.on("ready", function(){ //if ready, say so
     console.log("dnakbot is ready!");
-    prompt.get(['command'], function (err, result) {
-    //
-    // Log the results.
-    //
-    console.log('Command-line input received:');
-    console.log(result.command);
+    prompts()
+});
+function prompts() {
+  prompt.get(['command'], function (err, result) {
+  console.log('\n');
+  console.log(result.command);
     switch (result.command) {
       case 'help': //log all commands, note to self, make sure to update this
         console.log('commands:\n b: lolxd');
+        prompts()
         break;
       case 'servers': //log all servers currently active
-        var bse = client.guilds.get('335197048196562954')
-        bse.leave
-        console.log(client.guilds)
+        //var leaving = client.guilds.get('id')
+        //leaving.leave()
+        var guilds = client.guilds.array();
+        var names = '';
+        for (var i = 0; i < guilds.length; i++) {
+          names = names + guilds[i].name + ', '
+        }
+        console.log(names);
+        prompts()
         break;
       default:
-
     }
   });
-});
+}
 function requestdata(url){ //request data from url
   request({
       url: url,
@@ -85,7 +92,7 @@ function play(connection, message) {
   musicServer.dispatcher = connection.playStream(ytdl(musicServer.musicQueue[0], {filter: "audioonly"}));
   console.log('joined')
   info(connection, message)
-  musicServer.musicQueue.shift();
+  if (isLooping == false) musicServer.musicQueue.shift();
   musicServer.dispatcher.on("end", function() {
     if (musicServer.musicQueue[0]) musicList.shift(), message.reply('now playing ' + musicInfo.title.toLowerCase() + ' `' + duration + '` '), play(connection, message);
     else isPlaying = false ,connection.disconnect();
@@ -235,7 +242,7 @@ client.on('message', (message) => { //check for message
       case "status":
         status = ''
         for (var i = 1; i < args.length; i++) {
-          status = status + ' ' + args[i]
+          status = status + '' + args[i]
         }
         if(message.member.roles.has(bot_controller) || message.member.roles.has(bot_controller2))
           client.user.setGame(status), message.channel.send('setting status to' + status)
@@ -383,6 +390,14 @@ client.on('message', (message) => { //check for message
       case "resume":
         if(isPlaying == true) musicServer.dispatcher.paused = false, message.reply('resumed')
         else message.reply('not playing anything b')
+        break;
+      case "loop":
+        if (isLooping == true) {
+          isLooping = false
+        }
+        if (isLooping == false) {
+          isLooping = true
+        }
         break;
       //dev commmands
       case "verify":
