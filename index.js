@@ -8,10 +8,11 @@ const request = require("request");
 const getYouTubeID = require('get-youtube-id');
 const fetchVideoInfo = require('youtube-info');
 const youtubenode = require('youtube-node')
+var prompt = require('prompt');
+const spotify = require('./spotify.js');
 const youtube = new youtubenode()
 const client = new Discord.Client();
 const prefix = "./"
-const spotify = require('./spotify.js');
 //keys
 console.log("pulling keys...");
 const keys = JSON.parse(fs.readFileSync('keys.json')); //read all keys
@@ -40,12 +41,32 @@ var verification = {};
 var verifyUser; //user to verify
 var verifySpecialty;//users specialty
 var notadmin = 'djmango thinks you are not good enough for me'
+// TODO: add console command functions, loops, more websites and linux server admin stuff
 //set keys
 console.log('pushing keys...');
 youtube.setKey(yt_api_key) //apply youtube api key
 //functions
 client.on("ready", function(){ //if ready, say so
     console.log("dnakbot is ready!");
+    prompt.get(['command'], function (err, result) {
+    //
+    // Log the results.
+    //
+    console.log('Command-line input received:');
+    console.log(result.command);
+    switch (result.command) {
+      case 'help': //log all commands, note to self, make sure to update this
+        console.log('commands:\n b: lolxd');
+        break;
+      case 'servers': //log all servers currently active
+        var bse = client.guilds.get('335197048196562954')
+        bse.leave
+        console.log(client.guilds)
+        break;
+      default:
+
+    }
+  });
 });
 function requestdata(url){ //request data from url
   request({
