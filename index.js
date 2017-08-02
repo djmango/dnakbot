@@ -42,7 +42,7 @@ var verification = {};
 var verifyUser; //user to verify
 var verifySpecialty;//users specialty
 var notadmin = 'djmango thinks you are not good enough for me'
-// TODO: add console command functions, loops, more websites and linux server admin stuff
+// TODO: add console command functions, migrate linux server to ubuntu 16.04 and add webmin
 //set keys
 console.log('pushing keys...');
 youtube.setKey(yt_api_key) //apply youtube api key
@@ -242,7 +242,7 @@ client.on('message', (message) => { //check for message
       case "status":
         status = ''
         for (var i = 1; i < args.length; i++) {
-          status = status + '' + args[i]
+          status = status + args[i] + ' '
         }
         if(message.member.roles.has(bot_controller) || message.member.roles.has(bot_controller2))
           client.user.setGame(status), message.channel.send('setting status to' + status)
@@ -293,10 +293,13 @@ client.on('message', (message) => { //check for message
         isSearch = true;
         if (args[1]) {//if link or search query is provided, run code
           serverID = JSON.parse(message.guild.id);
-          if (!message.member.voiceChannel) {
+          if (!message.member.voiceChannel) {//check if on voice channel
             message.channel.send('u not in voice channel b')
             return
-          };//check if on voice channel
+          };
+          if (args[1].indexOf('.com') && !args[1].indexOf('youtube.com')) {
+            message.return('only youtube b')
+          }
           if(!musicServers[serverID]) musicServers[serverID] = {
             musicQueue: []
           };
