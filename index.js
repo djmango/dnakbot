@@ -245,7 +245,7 @@ client.on('message', (message) => { //check for message
           status = status + args[i] + ' '
         }
         if(message.member.roles.has(bot_controller) || message.member.roles.has(bot_controller2))
-          client.user.setGame(status), message.channel.send('setting status to' + status)
+          client.user.setGame(status), message.channel.send('setting status to ' + status)
         else message.channel.send(notadmin)
         break;
       case "purge":
@@ -335,7 +335,6 @@ client.on('message', (message) => { //check for message
             });
           }
           if(!message.guild.voiceConnection && isSearch == false) message.member.voiceChannel.join().then(function(connection){
-            console.log('joined for some re');
             play(connection, message)
           });
         }
