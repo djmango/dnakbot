@@ -29,8 +29,10 @@ var musicList = []; //names of music queue
 var musicResults = []; //all results of search query
 var musicSearch; //query for youtube search
 var isPlaying = false; //is music playing
+var isStreaming = false; //if music is streaming
 var isSearch = true; //if query is for search
 var isLooping = false; //if music is looping
+var isSearching = false; //if searching
 var duration; //duration of current song
 var serverID; //current server id
 var teamdata; //json data from vexDB
@@ -42,7 +44,7 @@ var verification = {};
 var verifyUser; //user to verify
 var verifySpecialty;//users specialty
 var notadmin = 'djmango thinks you are not good enough for me'
-// TODO: add console command functions, migrate linux server to ubuntu 16.04 and add webmin
+// TODO: add console command functions, add webhooks for github and bot restarting, factorio server manager
 //set keys
 console.log('pushing keys...');
 youtube.setKey(yt_api_key) //apply youtube api key
@@ -89,13 +91,14 @@ function requestdata(url){ //request data from url
       })
 }
 function play(connection, message) {
+  isStreaming = true;
   musicServer.dispatcher = connection.playStream(ytdl(musicServer.musicQueue[0], {filter: "audioonly"}));
   console.log('joined')
   info(connection, message)
   if (isLooping == false) musicServer.musicQueue.shift();
   musicServer.dispatcher.on("end", function() {
     if (musicServer.musicQueue[0]) musicList.shift(), message.reply('now playing ' + musicInfo.title.toLowerCase() + ' `' + duration + '` '), play(connection, message);
-    else isPlaying = false ,connection.disconnect();
+    else isPlaying = false, isStreaming = false, connection.disconnect();
   });
 }
 function info(message) {
@@ -294,11 +297,15 @@ client.on('message', (message) => { //check for message
         if (args[1]) {//if link or search query is provided, run code
           serverID = JSON.parse(message.guild.id);
           if (!message.member.voiceChannel) {//check if on voice channel
-            message.channel.send('u not in voice channel b')
+            message.reply('u not in voice channel b')
             return
           };
+          if (isSearching == true) {
+            message.reply('choose a song before you search again')
+            return
+          }
           if (args[1].indexOf('.com') && !args[1].indexOf('youtube.com')) {
-            message.return('only youtube b')
+            message.reply('only youtube b')
           }
           if(!musicServers[serverID]) musicServers[serverID] = {
             musicQueue: []
@@ -330,6 +337,7 @@ client.on('message', (message) => { //check for message
                 }
                 ret += "`"
                 message.reply('search results:' + ret);
+                isSearching = true;
                 isSearch = true;
               }
             });
@@ -337,6 +345,9 @@ client.on('message', (message) => { //check for message
           if(!message.guild.voiceConnection && isSearch == false) message.member.voiceChannel.join().then(function(connection){
             play(connection, message)
           });
+          else if(isStreaming == false && isSearch == false){
+            play(connection, message)
+          }
         }
         else {
           message.reply('pls provide a link or search query')
@@ -351,10 +362,14 @@ client.on('message', (message) => { //check for message
         console.log(musicServers[serverID].musicQueue[0])
         musicServer = musicServers[serverID];
         isPlaying = true;
+        isSearching = false;
         info(message)
         if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
           play(connection, message)
         });
+        else if(isStreaming == false){
+          play(connection, message)
+        }
         break;
       case "skip":
         if (musicServer.musicQueue[0]) {
@@ -364,14 +379,6 @@ client.on('message', (message) => { //check for message
           musicList.shift()
           musicServer.dispatcher.end()
           console.log(musicList)
-        }
-        break;
-      case "join":
-        if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
-          play(connection, message)
-        });
-        else {
-          message.reply('im already in a voice channel b')
         }
         break;
       case "song":
