@@ -55,6 +55,7 @@ client.on("ready", function(){ //if ready, say so
     console.log("dnakbot is ready!");
     prompts()
 });
+
 function prompts() {
   prompt.get(['command'], function (err, result) {
   console.log('\n');
@@ -204,7 +205,7 @@ client.on('guildMemberAdd', member => {//welcome message on join
   }
       });
     });
-client.on('message', (message) => { //check for message
+client.on('message', async message => { //check for message
     botcontroller(message.member) //find out if message author is a bot controller
     serverID = JSON.parse(message.guild.id); //pull server id
     if (message.author.equals(client.user)) return; //check if the client sent the message, if so ignore
@@ -218,7 +219,9 @@ client.on('message', (message) => { //check for message
     switch (args[0].toLowerCase()) {
       //reply statements
       case "ping":
-        message.channel.send('pong ' + '`' + message.member.client.ping + ' msecs' + '`');
+        //message.channel.send('pong ' + '`' + message.member.client.ping + ' msecs' + '`');
+        const m = await message.channel.send("ping?");
+        m.edit(`pong! latency is ${m.createdTimestamp - message.createdTimestamp}ms. api latency is ${Math.round(client.ping)}ms`);
         break;
       case "help":
         message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. features include youtube music, youtube playlists and custom definitions. type ./commands for commands')
@@ -237,19 +240,27 @@ client.on('message', (message) => { //check for message
         description: 'list of commands for dnakbot',
         fields: [{
             name: "general",
-            value: "`ping` `help` `info` `commands` `def` `def add`"
+            value: "`ping`, `help`, `info`, `commands`, `def`"
           },
           {
             name: "music",
-            value: "`play`, `skip`, `pause`, `resume`, `join`, `queue`, `song`"
+            value: "`play`, `choose`, `skip`, `pause`, `resume`, `join`, `queue`, `song`, `loop`"
+          },
+          {
+            name: "verification",
+            value: "`verify`"
+          },
+          {
+            name: "admin",
+            value: "`def add`, `purge`, `status`"
           },
         ],
         timestamp: new Date(),
         footer: {
           icon_url: client.user.avatarURL,
           text: "© djmango"
-        }
-        }
+          }
+          }
         });
         break;
       //admin commands
@@ -416,7 +427,7 @@ client.on('message', (message) => { //check for message
           isLooping = true
         }
         break;
-      //dev commmands
+      //moderation commmands
       case "verify":
         if(message.channel.id == 335507682108768257 || message.channel.id == 342927069807640579){
           if (!args[2] || !args[1]) {
@@ -436,7 +447,7 @@ client.on('message', (message) => { //check for message
         message.delete();
         }
         break;
-      //vexdb commands
+      //wiki commands
       case "vex":
         switch (args[1]) {
           case "team":
