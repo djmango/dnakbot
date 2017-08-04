@@ -20,6 +20,7 @@ const token = keys.discordtoken //discord api key
 const yt_api_key = keys.youtubetoken //youtube api key
 const bot_controller = keys.bot_controller //retros arcade bot coontroller role
 const bot_controller2 = keys.bot_controller2 //dnak dev bot controller role
+const bot_controller3 = keys.bot_controller3 //dank members bot controller role
 //vars
 console.log("setting variables...");
 var musicServers = {}; //all servers playing music
@@ -33,6 +34,7 @@ var isStreaming = false; //if music is streaming
 var isSearch = true; //if query is for search
 var isLooping = false; //if music is looping
 var isSearching = false; //if searching
+var isBotController = false; //if author is bot controller
 var duration; //duration of current song
 var serverID; //current server id
 var teamdata; //json data from vexDB
@@ -76,6 +78,15 @@ function prompts() {
       default:
     }
   });
+}
+function botcontroller(author) { //check if messsage author is bot controller
+  //author = message.member
+  if(author.roles.has(bot_controller) || author.roles.has(bot_controller2) || author.roles.has(bot_controller3) || author.id == 193066810470301696){
+    isBotController = true;
+  }
+  else {
+    isBotController = false;
+  }
 }
 function requestdata(url){ //request data from url
   request({
@@ -194,8 +205,8 @@ client.on('guildMemberAdd', member => {//welcome message on join
       });
     });
 client.on('message', (message) => { //check for message
-    const member = message.member;
-    const mess = message.content.toLowerCase();
+    botcontroller(message.member) //find out if message author is a bot controller
+    serverID = JSON.parse(message.guild.id); //pull server id
     if (message.author.equals(client.user)) return; //check if the client sent the message, if so ignore
 
     if (!message.content.startsWith(prefix)) return; //check for prefix
@@ -247,12 +258,12 @@ client.on('message', (message) => { //check for message
         for (var i = 1; i < args.length; i++) {
           status = status + args[i] + ' '
         }
-        if(message.member.roles.has(bot_controller) || message.member.roles.has(bot_controller2))
+        if(isBotController == true)
           client.user.setGame(status), message.channel.send('setting status to ' + status)
         else message.channel.send(notadmin)
         break;
       case "purge":
-        if(message.member.roles.has(bot_controller) || message.member.roles.has(bot_controller2)){
+        if(isBotController == true){
           let messagecount = parseInt(args[1]);
           message.channel.fetchMessages({limit: messagecount}).then(messages => message.channel.bulkDelete(messages));
         }
@@ -266,7 +277,6 @@ client.on('message', (message) => { //check for message
               //documentation: use object, server:object:word:defenition, { a: {x: 7, y: 9} }
               //[serverID {wordTodefine: wordDefinition, wordTodefine, wordDefinition }]
               //def add (word to define) (definition)
-              serverID = JSON.parse(message.guild.id); //pull server id
               definitions = JSON.parse(fs.readFileSync(`./def/def${serverID}.json`)) //pull definitions for server
               wordTodefine = args[2]
               wordDefinition = ''
@@ -277,11 +287,9 @@ client.on('message', (message) => { //check for message
               fs.writeFile(`./def/def${serverID}.json`, JSON.stringify(definitions)) //push updated definitions for server
               break;
             case "init":
-              serverID = JSON.parse(message.guild.id); //pull server id
               fs.writeFileSync(`./def/def${serverID}.json`, JSON.stringify({}));
               break;
             default:
-              serverID = JSON.parse(message.guild.id); //pull server id
               definitions = JSON.parse(fs.readFileSync(`./def/def${serverID}.json`)) //pull definitions for server
               wordTodefine = (args[1])
               message.channel.send(definitions[wordTodefine])
