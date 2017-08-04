@@ -418,9 +418,15 @@ client.on('message', (message) => { //check for message
         break;
       //dev commmands
       case "verify":
-        if(message.channel.id == 335507682108768257){
+        if(message.channel.id == 335507682108768257 || message.channel.id == 342927069807640579){
+          if (!args[2] || !args[1]) {
+            message.reply('make sure to follow the format described in the pins')
+            return
+          }
           verifyUser = args[1]
-          verifySpecialty = args[2]
+          for (var i = 2; i < args.length; i++) {
+            verifySpecialty = args[i]
+          }
           verification[verifyUser] = verifySpecialty
           fs.writeFile('./verification.json', JSON.stringify(verification))
           message.reply('thank you for submitting a verification request')
