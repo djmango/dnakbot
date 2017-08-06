@@ -8,7 +8,7 @@ const request = require("request");
 const getYouTubeID = require('get-youtube-id');
 const fetchVideoInfo = require('youtube-info');
 const youtubenode = require('youtube-node')
-var prompt = require('prompt');
+const prompt = require('prompt');
 const spotify = require('./spotify.js');
 const youtube = new youtubenode()
 const client = new Discord.Client();
@@ -52,7 +52,7 @@ console.log('pushing keys...');
 youtube.setKey(yt_api_key) //apply youtube api key
 //functions
 client.on("ready", function(){ //if ready, say so
-    console.log("dnakbot is ready!");
+    console.log("dnakbot is ready!\n" + `logged in as ${client.user.tag}!`);
     prompts()
 });
 
@@ -270,7 +270,7 @@ client.on('message', async message => { //check for message
           status = status + args[i] + ' '
         }
         if(isBotController == true)
-          client.user.setGame(status), message.channel.send('setting status to ' + status)
+          client.user.setGame(status), message.channel.send('setting status to playing ' + status)
         else message.channel.send(notadmin)
         break;
       case "purge":
