@@ -35,6 +35,7 @@ var isSearch = true; //if query is for search
 var isLooping = false; //if music is looping
 var isSearching = false; //if searching
 var isBotController = false; //if author is bot controller
+var isBotSudo = false; //if djmango is sending message
 var duration; //duration of current song
 var serverID; //current server id
 var teamdata; //json data from vexDB
@@ -209,7 +210,8 @@ client.on('message', async message => { //check for message
     botcontroller(message.member) //find out if message author is a bot controller
     serverID = JSON.parse(message.guild.id); //pull server id
     if (message.author.equals(client.user)) return; //check if the client sent the message, if so ignore
-
+    if (message.author.id == 193066810470301696) isBotSudo = true;
+    else isBotSudo = false;
     if (!message.content.startsWith(prefix)) return; //check for prefix
 
     var args = message.content.substring(prefix.length).split(" "); //take each argument
@@ -445,6 +447,21 @@ client.on('message', async message => { //check for message
         else {
         message.reply("use the #verification chat for verification requests");
         message.delete();
+        }
+        break;
+      //sudo commands
+      case "sudo":
+        if (isBotSudo == false) {
+          message.reply('you are not djmango sorry b');
+          return;
+        }
+        switch (args[1]) {
+          case "admin":
+            console.log('b')
+            fs.writeFile('./botAdmins.json', args[2])
+            break;
+          default:
+
         }
         break;
       //wiki commands
