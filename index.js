@@ -36,6 +36,7 @@ var isLooping = false; //if music is looping
 var isSearching = false; //if searching
 var isBotController = false; //if author is bot controller
 var isBotSudo = false; //if djmango is sending message
+var adminList = [];
 var duration; //duration of current song
 var serverID; //current server id
 var teamdata; //json data from vexDB
@@ -175,6 +176,9 @@ function info(message) {
     message.reply('added ' + musicInfo.title + ' `' + duration + '` to the queue')
   });
 }
+function sendteamdata () {
+  message.channel.send(teamdata)
+}
 client.on('guildMemberAdd', member => {//welcome message on join
   member.guild.defaultChannel.send({embed: {
     color: 0xFFFFFF,
@@ -206,25 +210,29 @@ client.on('guildMemberAdd', member => {//welcome message on join
   }
       });
     });
-client.on('message', async message => { //check for message
+client.on('message', async message => {
+  var args = message.content.substring(prefix.length).split(" "); //take each argument
+  switch (args[0].toLowerCase()) {
+    case "ping":
+      //message.channel.send('pong ' + '`' + message.member.client.ping + ' msecs' + '`');
+      const m = await message.channel.send("ping?");
+      m.edit(`pong! latency is ${m.createdTimestamp - message.createdTimestamp}ms. api latency is ${Math.round(client.ping)}ms`);
+      break;
+  default:
+}
+
+})
+client.on('message', message => { //check for message
     botcontroller(message.member) //find out if message author is a bot controller
     serverID = JSON.parse(message.guild.id); //pull server id
     if (message.author.equals(client.user)) return; //check if the client sent the message, if so ignore
     if (message.author.id == 193066810470301696) isBotSudo = true;
     else isBotSudo = false;
+    definitions = JSON.parse(fs.readFileSync(`verification.json`)) //pull admins
     if (!message.content.startsWith(prefix)) return; //check for prefix
-
     var args = message.content.substring(prefix.length).split(" "); //take each argument
-    function sendteamdata () {
-      message.channel.send(teamdata)
-    }
     switch (args[0].toLowerCase()) {
       //reply statements
-      case "ping":
-        //message.channel.send('pong ' + '`' + message.member.client.ping + ' msecs' + '`');
-        const m = await message.channel.send("ping?");
-        m.edit(`pong! latency is ${m.createdTimestamp - message.createdTimestamp}ms. api latency is ${Math.round(client.ping)}ms`);
-        break;
       case "help":
         message.channel.send('hello my name is dnak bot, i am a dnak discrod bot made by djmango. features include youtube music, youtube playlists and custom definitions. type ./commands for commands')
         break;
@@ -342,6 +350,7 @@ client.on('message', async message => { //check for message
             for (var i = 1; i < args.length; i++) { //for loop to loop through search query
               musicSearch = musicSearch + ' ' + args[i]
             }
+
             youtube.search(musicSearch, 5, function(error, result) {
               if (error) {
                 console.log(error);
@@ -349,6 +358,7 @@ client.on('message', async message => { //check for message
               else {
                 //push results to public variable
                 for (var i = 0; i < 5; i++) {
+                  console.log(result.items[i])
                   musicResults[i] = result.items[i]
                 }
                 //choose song out of results
@@ -388,18 +398,20 @@ client.on('message', async message => { //check for message
         if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
           play(connection, message)
         });
-        else if(isStreaming == false){
+        else if(isStreaming == false && message.guild.voiceConnection){
           play(connection, message)
         }
+        break;
+      case "join":
+        message.member.voiceChannel.join()
+        message.reply('joining now!')
         break;
       case "skip":
         if (musicServer.musicQueue[0]) {
           serverID = JSON.parse(message.guild.id);
           musicServer = musicServers[serverID];
-          console.log(musicList)
           musicList.shift()
           musicServer.dispatcher.end()
-          console.log(musicList)
         }
         break;
       case "song":
@@ -457,8 +469,9 @@ client.on('message', async message => { //check for message
         }
         switch (args[1]) {
           case "admin":
-            console.log('b')
-            fs.writeFile('./botAdmins.json', args[2])
+            fs.writeFile('./botAdmins.json', args[2], (err) => {
+	             if (err) throw err;
+               });
             break;
           default:
 
@@ -477,7 +490,9 @@ client.on('message', async message => { //check for message
         }
         break;
       default: //default
-        message.channel.send("incorrect command");
+        if (args[0].toLowerCase() !== "ping") {
+          message.channel.send("incorrect command");
+        }
     }
 });
 
