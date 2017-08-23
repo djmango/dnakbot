@@ -62,7 +62,7 @@ youtube.setKey(yt_api_key) //apply youtube api key
 client.on("ready", function() { //if ready, say so
   console.log("dnakbot is ready!\n" + `logged in as ${client.user.tag}!`);
   os.cpuUsage(function(v) {
-    cpuUse = ('cpu usage (%): ' + Math.round(100*v)/100);
+    cpuUse = ('cpu usage (%): ' + Math.round(100 * v) / 100);
   });
   prompts()
 });
@@ -102,7 +102,8 @@ function prompts() {
 function botcontroller(author) {
   //check if messsage author is bot controller
   //author = message.member
-  if (author.roles.has(bot_controller) || author.roles.has(bot_controller2) || author.roles.has(bot_controller3) || author.id == 193066810470301696) {
+  var adminTemp = fs.readFileSync('./botAdmins.json');
+  if (author.roles.has(bot_controller) || author.roles.has(bot_controller2) || author.roles.has(bot_controller3) || author.id == 193066810470301696 || adminTemp.toString().indexOf(author.id) !== -1) {
     isBotController = true;
   } else {
     isBotController = false;
@@ -244,7 +245,7 @@ client.on('message', message => { //check for message
   botcontroller(message.member) //find out if message author is a bot controller
   serverID = JSON.parse(message.guild.id); //pull server id
   os.cpuUsage(function(v) {
-    cpuUse = ('cpu usage (%): ' + Math.round(100*v)/100);
+    cpuUse = ('cpu usage (%): ' + Math.round(100 * v) / 100);
   });
   if (message.author.equals(client.user)) return; //check if the client sent the message, if so ignore
   if (message.author.id == 193066810470301696) isBotSudo = true;
@@ -312,9 +313,9 @@ client.on('message', message => { //check for message
       break;
     case "info":
       var uptime = format((process.hrtime()[0] - startTime[0]) * 1000);
-      var memory = (Math.round(10*os.freemem())/100 + "/" + Math.round(10*os.totalmem())/100)
-      message.reply("```\nbot uptime: " + uptime  + "\n" + cpuUse + "\nmemory (mb): " + memory + "\nos: ubuntu server 16.04 lts 64bit"  +
-      "\nsystem uptime: " + format(os.sysUptime() * 1000) + "```")
+      var memory = (Math.round(10 * os.freemem()) / 100 + "/" + Math.round(10 * os.totalmem()) / 100)
+      message.reply("```\nbot uptime: " + uptime + "\n" + cpuUse + "\nmemory (mb): " + memory + "\nos: ubuntu server 16.04 lts 64bit" +
+        "\nsystem uptime: " + format(os.sysUptime() * 1000) + "```")
       break;
       //def commands
     case "def":
@@ -492,10 +493,26 @@ client.on('message', message => { //check for message
         return;
       }
       switch (args[1]) {
-        case "admin":
-          fs.writeFile('./botAdmins.json', args[2], (err) => {
+        case "help":
+          message.reply('```op: ./sudo op (name) (id), deop: ./sudo deop (name), oplist: ./oplist```')
+          break;
+        case "op":
+          var adminTemp = JSON.parse(fs.readFileSync('./botAdmins.json'));
+          adminTemp[args[2]] = args[3]
+          fs.writeFileSync('./botAdmins.json', JSON.stringify(adminTemp), (err) => {
             if (err) throw err;
           });
+          break;
+        case "deop":
+          var adminTemp = JSON.parse(fs.readFileSync('./botAdmins.json'));
+          delete adminTemp[args[2]]
+          fs.writeFileSync('./botAdmins.json', JSON.stringify(adminTemp), (err) => {
+            if (err) throw err;
+          });
+          break;
+        case "oplist":
+          var adminTemp = fs.readFileSync('./botAdmins.json');
+          message.reply(adminTemp.toString())
           break;
         default:
 
