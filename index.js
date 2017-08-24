@@ -486,6 +486,18 @@ client.on('message', message => { //check for message
         message.delete();
       }
       break;
+    case "whois":
+    // TODO: finish user lookup, also add an economy thingy
+      var whois = args[1]
+      let embed = new Discord.RichEmbed()
+        .setAuthor(message.author.username)
+        .setDescription("This is the user's info")
+        .setColor("9B59B6")
+        .addField("Full Username", `${message.author.username}#${message.author.discriminator}`)
+        .addField("Full ID", `${message.author.id}`)
+        .addField("Created At", message.author.createdAt)
+      message.channel.sendEmbed(embed)
+      break;
       //sudo commands
     case "sudo":
       if (isBotSudo == false) {
@@ -494,7 +506,7 @@ client.on('message', message => { //check for message
       }
       switch (args[1]) {
         case "help":
-          message.reply('```op: ./sudo op (name) (id), deop: ./sudo deop (name), oplist: ./oplist```')
+          message.reply('```op: ./sudo op (name) (id), deop: ./sudo deop (name), oplist: ./sudo oplist```')
           break;
         case "op":
           var adminTemp = JSON.parse(fs.readFileSync('./botAdmins.json'));
