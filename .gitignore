@@ -52,3 +52,5 @@ def
 node_modules
 alsthing.js
 botAdmins.json
+node_modules
+package-lock.json
