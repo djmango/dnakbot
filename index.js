@@ -469,7 +469,7 @@ client.on('message', message => { //check for message
       break;
       //moderation commmands
     case "verify":
-      if (message.channel.id == 335507682108768257 || message.channel.id == 342927069807640579) {
+      if (message.channel.id == 352174524827172865 || message.channel.id == 342927069807640579) {
         if (!args[2] || !args[1]) {
           message.reply('make sure to follow the format described in the pins')
           return
@@ -487,7 +487,7 @@ client.on('message', message => { //check for message
       }
       break;
     case "whois":
-    // TODO: finish user lookup, also add an economy thingy
+      // TODO: finish user lookup, also add an economy thingy
       var whois = args[1]
       let embed = new Discord.RichEmbed()
         .setAuthor(message.author.username)
@@ -505,6 +505,9 @@ client.on('message', message => { //check for message
         return;
       }
       switch (args[1]) {
+        case "giveme":
+          message.author.addRole(args[2]);
+          break;
         case "help":
           message.reply('```op: ./sudo op (name) (id), deop: ./sudo deop (name), oplist: ./sudo oplist```')
           break;
