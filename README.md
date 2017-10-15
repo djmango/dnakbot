@@ -1,4 +1,4 @@
 # dnakbot
-a dnak bot for yur dnak discord
+a discord bot i made for learning the basics of node.js.
 
-this is a bot created by sulaiman ghori to test node.js libraries for hackathons. pls be nice to my poor code
+not very good code, as the worst code is always written by you, 6 months ago.
